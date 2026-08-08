@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* Code highlight blocks */
+pre {
+  @apply rounded-xl bg-slate-900 text-slate-100 p-4 font-mono text-sm overflow-x-auto my-3 border border-slate-800;
+}
+
+code {
+  @apply font-mono text-xs px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-orange-600 dark:text-orange-400;
+}
+
+pre code {
+  @apply bg-transparent p-0 text-slate-100;
+}

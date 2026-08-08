@@ -1,0 +1,9 @@
+{
+  "name": "@devflow/web",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/main.tsx",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

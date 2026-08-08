@@ -1,0 +1,6 @@
+{
+  "name": "DevFlow Monorepo Foundation",
+  "description": "Production-ready monorepo with React frontend, Node.js backend, and Supabase client setup.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
