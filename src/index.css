@@ -1,9 +1,48 @@
 @import "tailwindcss";
 
+:root {
+  --background: #0b0f17;
+  --foreground: #f8fafc;
+
+  --surface: #111722;
+  --surface-elevated: #17202e;
+  --surface-muted: #1e293b;
+
+  --border: #222f43;
+  --border-subtle: #182333;
+
+  --primary: #10b981;
+  --primary-foreground: #022c22;
+
+  --secondary: #1e293b;
+  --secondary-foreground: #e2e8f0;
+
+  --muted: #1a2433;
+  --muted-foreground: #94a3b8;
+
+  --success: #10b981;
+  --success-foreground: #022c22;
+
+  --warning: #f59e0b;
+  --warning-foreground: #451a03;
+
+  --danger: #ef4444;
+  --danger-foreground: #450a0a;
+
+  --info: #3b82f6;
+  --info-foreground: #172554;
+}
+
 @layer base {
   body {
-    @apply bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  code, kbd, samp, pre {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 }
 
@@ -18,23 +57,84 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3);
+  background: #222f43;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.5);
+  background: #334155;
 }
 
-/* Code highlight blocks */
-pre {
-  @apply rounded-xl bg-slate-900 text-slate-100 p-4 font-mono text-sm overflow-x-auto my-3 border border-slate-800;
+/* Typography Utility Classes */
+.text-display {
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
 }
 
-code {
-  @apply font-mono text-xs px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-orange-600 dark:text-orange-400;
+.text-h1 {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-pre code {
-  @apply bg-transparent p-0 text-slate-100;
+.text-h2 {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.text-h3 {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.text-body {
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+  color: #cbd5e1;
+}
+
+.text-body-sm {
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  color: #94a3b8;
+}
+
+.text-caption {
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  color: #64748b;
+}
+
+.text-tech-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+.text-tech-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+/* Pulsing and skeleton animations */
+@keyframes shimmer {
+  0% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.4; }
+}
+
+.animate-skeleton {
+  animation: shimmer 1.8s ease-in-out infinite;
 }

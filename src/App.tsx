@@ -1,2 +1,6 @@
-import App from '../apps/web/src/App';
-export default App;
+import React from 'react';
+import { DesignSystem } from './components/DesignSystem';
+
+export default function App() {
+  return <DesignSystem />;
+}
