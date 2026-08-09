@@ -373,6 +373,8 @@ export function generateSummary(
   return `${mainLang} ${appType}.${pmPart}`;
 }
 
+import { extractDependencyIntelligence } from './dependency-extractor.js';
+
 /**
  * Main entry point: Performs rule-based analysis on cloned repository directory and metadata.
  */
@@ -382,6 +384,7 @@ export async function analyzeRepositoryIntelligence(
 ): Promise<RepositoryIntelligence> {
   const pkgData = await readPackageJson(repoDir);
   const topDirs = await getTopLevelDirectories(repoDir);
+  const depIntelligence = await extractDependencyIntelligence(repoDir);
 
   const detectedLanguages = detectLanguages(metadata.extensionCounts, metadata.fileCount);
   const detectedPackageManager = detectPackageManager(metadata.detectedFiles);
@@ -414,5 +417,12 @@ export async function analyzeRepositoryIntelligence(
     apiSurfaceHints,
     architectureHints,
     summary,
+    dependencies: depIntelligence.dependencies,
+    dependencyCount: depIntelligence.dependencyCount,
+    productionDependencyCount: depIntelligence.productionDependencyCount,
+    developmentDependencyCount: depIntelligence.developmentDependencyCount,
+    optionalDependencyCount: depIntelligence.optionalDependencyCount,
+    peerDependencyCount: depIntelligence.peerDependencyCount,
+    dependencyManifests: depIntelligence.dependencyManifests,
   };
 }

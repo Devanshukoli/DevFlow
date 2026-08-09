@@ -65,6 +65,15 @@ export interface DetectedFramework {
   category?: string;
 }
 
+export type DependencyType = 'production' | 'development' | 'optional' | 'peer' | 'unknown';
+
+export interface RepositoryDependency {
+  name: string;
+  version: string;
+  type: DependencyType;
+  source: string;
+}
+
 export interface RepositoryIntelligence {
   fileCount: number;
   directoryCount: number;
@@ -78,6 +87,13 @@ export interface RepositoryIntelligence {
   apiSurfaceHints: string[];
   architectureHints: string[];
   summary: string;
+  dependencies: RepositoryDependency[];
+  dependencyCount: number;
+  productionDependencyCount: number;
+  developmentDependencyCount: number;
+  optionalDependencyCount: number;
+  peerDependencyCount: number;
+  dependencyManifests: string[];
 }
 
 export interface AnalysisResult extends RepositoryIntelligence {

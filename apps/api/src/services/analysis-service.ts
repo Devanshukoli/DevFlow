@@ -30,6 +30,13 @@ export interface DBAnalysisResultRow {
   api_surface_hints: string[];
   architecture_hints: string[];
   summary: string;
+  dependencies?: any[];
+  dependency_count?: number;
+  production_dependency_count?: number;
+  development_dependency_count?: number;
+  optional_dependency_count?: number;
+  peer_dependency_count?: number;
+  dependency_manifests?: string[];
   created_at: string;
   updated_at: string;
 }
@@ -167,6 +174,13 @@ export async function saveAnalysisResult(
     apiSurfaceHints: intelligence.apiSurfaceHints,
     architectureHints: intelligence.architectureHints,
     summary: intelligence.summary,
+    dependencies: intelligence.dependencies || [],
+    dependencyCount: intelligence.dependencyCount || 0,
+    productionDependencyCount: intelligence.productionDependencyCount || 0,
+    developmentDependencyCount: intelligence.developmentDependencyCount || 0,
+    optionalDependencyCount: intelligence.optionalDependencyCount || 0,
+    peerDependencyCount: intelligence.peerDependencyCount || 0,
+    dependencyManifests: intelligence.dependencyManifests || [],
     createdAt: now,
     updatedAt: now,
   };
@@ -193,6 +207,13 @@ export async function saveAnalysisResult(
     api_surface_hints: intelligence.apiSurfaceHints,
     architecture_hints: intelligence.architectureHints,
     summary: intelligence.summary,
+    dependencies: intelligence.dependencies || [],
+    dependency_count: intelligence.dependencyCount || 0,
+    production_dependency_count: intelligence.productionDependencyCount || 0,
+    development_dependency_count: intelligence.developmentDependencyCount || 0,
+    optional_dependency_count: intelligence.optionalDependencyCount || 0,
+    peer_dependency_count: intelligence.peerDependencyCount || 0,
+    dependency_manifests: intelligence.dependencyManifests || [],
     updated_at: now,
   };
 
@@ -225,6 +246,13 @@ export async function saveAnalysisResult(
     apiSurfaceHints: row.api_surface_hints,
     architectureHints: row.architecture_hints,
     summary: row.summary,
+    dependencies: row.dependencies || [],
+    dependencyCount: row.dependency_count ?? 0,
+    productionDependencyCount: row.production_dependency_count ?? 0,
+    developmentDependencyCount: row.development_dependency_count ?? 0,
+    optionalDependencyCount: row.optional_dependency_count ?? 0,
+    peerDependencyCount: row.peer_dependency_count ?? 0,
+    dependencyManifests: row.dependency_manifests || [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -276,6 +304,13 @@ export async function getAnalysisResultByJobId(jobId: string): Promise<AnalysisR
     apiSurfaceHints: row.api_surface_hints,
     architectureHints: row.architecture_hints,
     summary: row.summary,
+    dependencies: row.dependencies || [],
+    dependencyCount: row.dependency_count ?? 0,
+    productionDependencyCount: row.production_dependency_count ?? 0,
+    developmentDependencyCount: row.development_dependency_count ?? 0,
+    optionalDependencyCount: row.optional_dependency_count ?? 0,
+    peerDependencyCount: row.peer_dependency_count ?? 0,
+    dependencyManifests: row.dependency_manifests || [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

@@ -9,6 +9,7 @@ import { ExtensionDistribution } from './ExtensionDistribution';
 import { ArchitectureSignals } from './ArchitectureSignals';
 import { ApiSurfacePanel } from './ApiSurfacePanel';
 import { ProjectFilesPanel } from './ProjectFilesPanel';
+import { DependencyIntelligencePanel } from './DependencyIntelligencePanel';
 import { ReportSummary } from './ReportSummary';
 import { ArrowLeft, RefreshCw, AlertTriangle, FileQuestion } from 'lucide-react';
 
@@ -305,6 +306,17 @@ export const RepositoryReportPage: React.FC<RepositoryReportPageProps> = ({
           </div>
 
         </div>
+
+        {/* Dependency Intelligence Panel */}
+        <DependencyIntelligencePanel
+          dependencies={result.dependencies}
+          dependencyCount={result.dependencyCount}
+          productionDependencyCount={result.productionDependencyCount}
+          developmentDependencyCount={result.developmentDependencyCount}
+          optionalDependencyCount={result.optionalDependencyCount}
+          peerDependencyCount={result.peerDependencyCount}
+          dependencyManifests={result.dependencyManifests}
+        />
 
         {/* Project Files Panel */}
         <ProjectFilesPanel detectedFiles={result.detectedFiles} />

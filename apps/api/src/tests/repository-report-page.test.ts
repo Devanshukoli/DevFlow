@@ -56,6 +56,17 @@ describe('Task 8 - Repository Intelligence Report Logic & Formatters', () => {
       apiSurfaceHints: ['C / FFI interface detected'],
       architectureHints: ['Containerization detected'],
       summary: 'Rust general application.',
+      dependencies: [
+        { name: 'serde', version: '1.0', type: 'production', source: 'Cargo.toml' },
+        { name: 'tokio', version: '1.35', type: 'production', source: 'Cargo.toml' },
+        { name: 'pytest', version: '8.0', type: 'development', source: 'pyproject.toml' },
+      ],
+      dependencyCount: 3,
+      productionDependencyCount: 2,
+      developmentDependencyCount: 1,
+      optionalDependencyCount: 0,
+      peerDependencyCount: 0,
+      dependencyManifests: ['Cargo.toml', 'pyproject.toml'],
       createdAt: '2026-08-08T22:00:00.000Z',
       updatedAt: '2026-08-08T22:00:00.000Z',
     };
@@ -64,11 +75,14 @@ describe('Task 8 - Repository Intelligence Report Logic & Formatters', () => {
     assert.equal(mockResult.fileCount, 643);
     assert.equal(mockResult.directoryCount, 148);
     assert.equal(mockResult.detectedAppType, 'General Application');
-    assert.equal(mockResult.detectedPackageManager, null);
+    assert.equal(mockResult.dependencyCount, 3);
+    assert.equal(mockResult.productionDependencyCount, 2);
+    assert.equal(mockResult.developmentDependencyCount, 1);
+    assert.equal(mockResult.dependencies.length, 3);
+    assert.equal(mockResult.dependencyManifests.length, 2);
 
     // Verify no fabricated fields exist on the result object
     assert.equal((mockResult as any).healthScore, undefined);
-    assert.equal((mockResult as any).dependencyCount, undefined);
     assert.equal((mockResult as any).apiCount, undefined);
   });
 
