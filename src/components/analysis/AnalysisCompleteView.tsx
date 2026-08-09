@@ -6,15 +6,26 @@ import { AnalysisResult } from '@devflow/shared';
 export interface AnalysisCompleteViewProps {
   jobId: string;
   onNavigateHome: () => void;
+  onViewReport?: () => void;
 }
 
 export const AnalysisCompleteView: React.FC<AnalysisCompleteViewProps> = ({
   jobId,
   onNavigateHome,
+  onViewReport,
 }) => {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showJson, setShowJson] = useState(false);
+
+  const handleViewReport = () => {
+    if (onViewReport) {
+      onViewReport();
+    } else {
+      window.history.pushState({}, '', `/analysis/${jobId}/result`);
+      window.dispatchEvent(new Event('popstate'));
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -72,12 +83,20 @@ export const AnalysisCompleteView: React.FC<AnalysisCompleteViewProps> = ({
           </Button>
 
           <Button
+            variant="ghost"
+            size="md"
+            onClick={() => setShowJson(!showJson)}
+          >
+            {showJson ? 'Hide Raw JSON' : 'Raw JSON'}
+          </Button>
+
+          <Button
             variant="primary"
             size="md"
             rightIcon={<ArrowRight className="w-4 h-4" />}
-            onClick={() => setShowJson(!showJson)}
+            onClick={handleViewReport}
           >
-            {showJson ? 'Hide Report Preview' : 'View Repository Report'}
+            View Repository Report
           </Button>
         </div>
       </div>

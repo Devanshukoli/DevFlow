@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { HomePage } from './components/home/HomePage';
 import { DesignSystem } from './components/DesignSystem';
 import { AnalysisPage } from './components/analysis/AnalysisPage';
+import { RepositoryReportPage } from './components/report/RepositoryReportPage';
 
 export default function App() {
   const [showDesignSystem, setShowDesignSystem] = useState(false);
@@ -23,9 +24,9 @@ export default function App() {
     setCurrentPath(path);
   };
 
-  // Match /analysis/:jobId pattern
-  const analysisMatch = currentPath.match(/^\/analysis\/([a-zA-Z0-9_-]+)/);
-  const activeJobId = analysisMatch ? analysisMatch[1] : null;
+  // Match /analysis/:jobId/result or /analysis/:jobId
+  const reportMatch = currentPath.match(/^\/analysis\/([a-zA-Z0-9_-]+)\/result$/);
+  const analysisMatch = currentPath.match(/^\/analysis\/([a-zA-Z0-9_-]+)$/);
 
   if (showDesignSystem) {
     return (
@@ -44,11 +45,24 @@ export default function App() {
     );
   }
 
-  if (activeJobId) {
+  if (reportMatch) {
+    const reportJobId = reportMatch[1];
+    return (
+      <RepositoryReportPage
+        jobId={reportJobId}
+        onNavigateBack={() => navigateTo(`/analysis/${reportJobId}`)}
+        onNavigateHome={() => navigateTo('/')}
+      />
+    );
+  }
+
+  if (analysisMatch) {
+    const activeJobId = analysisMatch[1];
     return (
       <AnalysisPage
         jobId={activeJobId}
         onNavigateHome={() => navigateTo('/')}
+        onViewReport={() => navigateTo(`/analysis/${activeJobId}/result`)}
       />
     );
   }

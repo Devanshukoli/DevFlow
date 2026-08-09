@@ -12,6 +12,7 @@ import { GetAnalysisJobSuccessResponse } from '@devflow/shared';
 export interface AnalysisPageProps {
   jobId: string;
   onNavigateHome: () => void;
+  onViewReport?: () => void;
 }
 
 export interface JobStateData {
@@ -25,7 +26,7 @@ export interface JobStateData {
   completedAt: string | null;
 }
 
-export const AnalysisPage: React.FC<AnalysisPageProps> = ({ jobId, onNavigateHome }) => {
+export const AnalysisPage: React.FC<AnalysisPageProps> = ({ jobId, onNavigateHome, onViewReport }) => {
   const [jobData, setJobData] = useState<JobStateData | null>(null);
   const [isNotFound, setIsNotFound] = useState(false);
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
@@ -222,6 +223,7 @@ export const AnalysisPage: React.FC<AnalysisPageProps> = ({ jobId, onNavigateHom
           <AnalysisCompleteView
             jobId={jobData.jobId}
             onNavigateHome={onNavigateHome}
+            onViewReport={onViewReport}
           />
         )}
 
