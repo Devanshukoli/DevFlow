@@ -54,4 +54,4 @@ zerops:
         - node_modules
     run:
       base: nodejs@22
-      start: pnpm worker
+      start: pnpm run worker
