@@ -11,7 +11,7 @@ A clean, production-ready full-stack monorepo architecture built with React, Nod
 ├── packages/
 │   └── shared/            # Shared Types, Utilities, & Analysis Job Schema
 ├── supabase/
-│   └── migrations/        # SQL Migrations for Supabase (analysis_jobs table)
+│   └── migrations/        # SQL Migrations for Supabase (analysis_jobs & analysis_results)
 ├── server.ts              # Unified Dev & Production Container Server Gateway (Port 3000)
 ├── pnpm-workspace.yaml    # pnpm workspace definition (apps/*, packages/*)
 ├── package.json           # Monorepo Workspaces & Root Scripts
@@ -23,41 +23,37 @@ A clean, production-ready full-stack monorepo architecture built with React, Nod
 DevFlow tracks repository analysis jobs through the following state pipeline:
 
 ```
-[queued]  ──>  (future worker)  ──>  [running]  ──>  (future analysis stages)  ──>  [completed] / [failed]
+[queued] ──> (worker claim) ──> [running] ──> (clone + inspect + intelligence) ──> [completed] / [failed]
 ```
 
-- **`queued`**: Initial job created upon user submission (`POST /api/analysis`). *Implemented in Task 4.*
-- **`running`**: Worker picks up the job and executes cloning, AST parsing, dependency mapping, and health audit. *(Not implemented yet)*
-- **`completed`**: Analysis finished successfully and report dataset is persisted. *(Not implemented yet)*
-- **`failed`**: Job encountered an unrecoverable failure during execution. *(Not implemented yet)*
+- **`queued`**: Initial job created upon user submission (`POST /api/analysis`).
+- **`running`**: Worker picks up the job and executes cloning, metadata collection, intelligence derivation, and persistence.
+- **`completed`**: Analysis finished successfully and intelligence result is persisted in Supabase (`analysis_results`).
+- **`failed`**: Job encountered an unrecoverable failure during execution.
 
-> **Note**: The worker and analysis execution pipeline are intentionally not implemented yet. Task 4 establishes the job foundation, API contracts, Supabase persistence schema, and frontend queue integration.
+## 🧠 Repository Intelligence v1
 
-## ⚙️ Analysis Worker Process
+The worker (`apps/api/src/worker.ts`) and intelligence analyzer (`apps/api/src/services/intelligence-analyzer.ts`) extract deterministic, structured insights from cloned repository filesystems without external LLM dependencies:
 
-The worker (`apps/api/src/worker.ts`) is a separate background process responsible for asynchronous repository processing.
+- **Languages**: Extension frequency mapping ranked with confidence scores (`high` / `medium` / `low`).
+- **Frameworks**: Dependency detection from `package.json` and key project configuration markers.
+- **Package Manager**: Deterministic detection (`pnpm`, `npm`, `yarn`, `bun`, `cargo`, `pip`, `go modules`, `maven`, `gradle`).
+- **Application Type**: Categorization into `monorepo`, `full-stack app`, `backend API`, `frontend app`, `CLI tool`, `library/package`, or `documentation site`.
+- **API Surface Hints**: Routing directory detection (`routes/`, `controllers/`, `handlers/`, `api/`) and framework structure analysis.
+- **Architecture Hints**: Workspace layout boundaries, decoupled client/server setups, containerization (`Dockerfile`, `docker-compose`), and shared module detection.
+- **Summary**: Concise, factual single-sentence summary of the repository.
 
-### Responsibilities:
-- Acquire queued jobs safely using conditional updates (`status = 'queued'`)
-- Shallow clone public GitHub repositories (`git clone --depth 1`) using safe process spawning
-- Inspect repository filesystem structure and detect common project files
-- Collect deterministic file/directory counts, total byte size, and extension metrics
-- Transition job status and progress through deterministic stages (5% → 20% → 35% → 50% → 70% → 90% → 100%)
-- Clean up temporary job directories in a `finally` block
-- Handle failures gracefully without crashing the worker process
+## 🌐 API Endpoints
 
-### Current Limitations:
-- No AI / LLM calls
-- No AST parsing
-- No dependency graph generation
-- No architecture analysis diagrams
-- No real-time WebSockets / SSE transport
+- `POST /api/analysis`: Creates a new repository analysis job.
+- `GET /api/analysis/:jobId`: Retrieves job status and progress.
+- `GET /api/analysis/:jobId/result`: Retrieves computed repository intelligence result for a completed job.
 
 ## 🔒 Supabase & Environment Security
 
 - **Backend Privileged Client**: Server-side job operations execute via `SUPABASE_SERVICE_ROLE_KEY` in `apps/api/src/lib/supabase.ts`.
 - **Zero Browser Exposure**: The `SUPABASE_SERVICE_ROLE_KEY` exists exclusively in backend environment configurations and is never imported or exposed in client bundles.
-- **Row Level Security (RLS)**: Enabled on the `analysis_jobs` table. Direct public/anonymous client mutations are disabled.
+- **Row Level Security (RLS)**: Enabled on `analysis_jobs` and `analysis_results` tables. Direct public/anonymous client mutations are disabled.
 
 ## 🛠️ Development & Commands
 
@@ -70,14 +66,14 @@ pnpm run dev
 
 # Terminal 2: Start background analysis worker
 pnpm run worker
-# or: pnpm --filter @devflow/api worker
 
 # Run typecheck across all workspace packages
 pnpm run lint
 
 # Run unit tests
-npx tsx --test apps/api/src/services/*.test.ts
+pnpm test
 
 # Build production bundle (Web assets + API server bundle)
 pnpm run build
 ```
+

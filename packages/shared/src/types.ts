@@ -53,6 +53,46 @@ export interface GetAnalysisJobSuccessResponse {
   };
 }
 
+export interface DetectedLanguage {
+  name: string;
+  confidence: 'high' | 'medium' | 'low';
+  fileCount?: number;
+}
+
+export interface DetectedFramework {
+  name: string;
+  confidence: 'high' | 'medium' | 'low';
+  category?: string;
+}
+
+export interface RepositoryIntelligence {
+  fileCount: number;
+  directoryCount: number;
+  totalBytes: number;
+  extensionCounts: Record<string, number>;
+  detectedFiles: string[];
+  detectedLanguages: DetectedLanguage[];
+  detectedFrameworks: DetectedFramework[];
+  detectedPackageManager: string | null;
+  detectedAppType: string;
+  apiSurfaceHints: string[];
+  architectureHints: string[];
+  summary: string;
+}
+
+export interface AnalysisResult extends RepositoryIntelligence {
+  id: string;
+  jobId: string;
+  repositoryUrl: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GetAnalysisResultSuccessResponse {
+  ok: true;
+  data: AnalysisResult;
+}
+
 export interface ApiErrorDetail {
   code: string;
   message: string;
@@ -65,3 +105,4 @@ export interface ApiErrorResponse {
 
 export type CreateAnalysisJobResponse = CreateAnalysisJobSuccessResponse | ApiErrorResponse;
 export type GetAnalysisJobResponse = GetAnalysisJobSuccessResponse | ApiErrorResponse;
+export type GetAnalysisResultResponse = GetAnalysisResultSuccessResponse | ApiErrorResponse;

@@ -6,7 +6,8 @@ import {
 } from './services/worker-job-service.js';
 import { createTempRepoDir, cloneRepository, cleanupTempDir } from './services/git-service.js';
 import { inspectRepository } from './services/repo-inspector.js';
-import { DBAnalysisJobRow } from './services/analysis-service.js';
+import { analyzeRepositoryIntelligence } from './services/intelligence-analyzer.js';
+import { DBAnalysisJobRow, saveAnalysisResult } from './services/analysis-service.js';
 
 let isShuttingDown = false;
 let isProcessingJob = false;
@@ -42,19 +43,27 @@ export async function processJob(job: DBAnalysisJobRow): Promise<void> {
     await updateJobProgress(job.id, 50, 'Inspecting repository');
     console.log(`[worker] inspecting repository ${job.id}`);
 
-    // Stage 5: Collecting metadata (70%)
-    currentProgress = 70;
-    await updateJobProgress(job.id, 70, 'Collecting metadata');
+    // Stage 5: Collecting metadata (65%)
+    currentProgress = 65;
+    await updateJobProgress(job.id, 65, 'Collecting metadata');
     const metadata = await inspectRepository(tempDir);
     console.log(
       `[worker] metadata collected for ${job.id}: ${metadata.fileCount} files, ${metadata.directoryCount} dirs, ${metadata.totalBytes} bytes`
     );
 
-    // Stage 6: Finalizing analysis (90%)
-    currentProgress = 90;
-    await updateJobProgress(job.id, 90, 'Finalizing analysis');
+    // Stage 6: Deriving repository intelligence (80%)
+    currentProgress = 80;
+    await updateJobProgress(job.id, 80, 'Deriving repository intelligence');
+    console.log(`[worker] deriving repository intelligence ${job.id}`);
+    const intelligence = await analyzeRepositoryIntelligence(tempDir, metadata);
 
-    // Stage 7: Completed (100%)
+    // Stage 7: Persisting analysis results (90%)
+    currentProgress = 90;
+    await updateJobProgress(job.id, 90, 'Persisting analysis results');
+    console.log(`[worker] persisting analysis result ${job.id}`);
+    await saveAnalysisResult(job.id, job.repository_url, intelligence);
+
+    // Stage 8: Completed (100%)
     await markJobCompleted(job.id);
     console.log(`[worker] job completed ${job.id}`);
   } catch (err: any) {
@@ -68,6 +77,7 @@ export async function processJob(job: DBAnalysisJobRow): Promise<void> {
     }
   }
 }
+
 
 /**
  * Polling loop that continuously checks for and processes queued jobs.
