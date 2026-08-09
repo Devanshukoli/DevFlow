@@ -1,20 +1,23 @@
 zerops:
   - setup: frontend
     build:
-      base: nodejs@20
+      base: nodejs@22
       buildCommands:
-        - pnpm install --frozen-lockfile || pnpm install
+        - pnpm install --frozen-lockfile
         - pnpm build
-      deployFiles: dist
+      deployFiles:
+        - ./dist/~
+      cache:
+        - node_modules
     run:
       base: static
       type: spa
 
   - setup: api
     build:
-      base: nodejs@20
+      base: nodejs@22
       buildCommands:
-        - pnpm install --frozen-lockfile || pnpm install
+        - pnpm install --frozen-lockfile
         - pnpm build
       deployFiles:
         - dist
@@ -22,11 +25,13 @@ zerops:
         - node_modules
         - apps
         - packages
+      cache:
+        - node_modules
     run:
-      base: nodejs@20
+      base: nodejs@22
       ports:
         - port: 3000
-          http: true
+          httpSupport: true
       readinessCheck:
         httpGet:
           port: 3000
@@ -35,9 +40,9 @@ zerops:
 
   - setup: worker
     build:
-      base: nodejs@20
+      base: nodejs@22
       buildCommands:
-        - pnpm install --frozen-lockfile || pnpm install
+        - pnpm install --frozen-lockfile
         - pnpm build
       deployFiles:
         - dist
@@ -45,6 +50,8 @@ zerops:
         - node_modules
         - apps
         - packages
+      cache:
+        - node_modules
     run:
-      base: nodejs@20
+      base: nodejs@22
       start: pnpm worker
