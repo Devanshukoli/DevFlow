@@ -116,6 +116,48 @@ export interface RepositoryArchitecture {
   apiBoundaries: string[];
 }
 
+export interface ApiRoute {
+  method: string;
+  path: string | null;
+  sourceFile: string;
+  framework: string;
+  confidence: 'high' | 'medium' | 'low';
+  line?: number;
+}
+
+export interface ApiFramework {
+  name: string;
+  version?: string;
+  confidence: 'high' | 'medium' | 'low';
+}
+
+export interface GraphqlSurface {
+  provider: string;
+  endpoint: string | null;
+  confidence: 'high' | 'medium' | 'low';
+}
+
+export interface RpcSurface {
+  serviceName: string;
+  methods: string[];
+  sourceFile: string;
+  confidence: 'high' | 'medium' | 'low';
+}
+
+export interface ApiSurfaceSignal {
+  signal: string;
+  evidence: string[];
+  confidence: 'high' | 'medium' | 'low';
+}
+
+export interface RepositoryApiSurface {
+  frameworks: ApiFramework[];
+  routes: ApiRoute[];
+  graphql: GraphqlSurface[];
+  rpc: RpcSurface[];
+  signals: ApiSurfaceSignal[];
+}
+
 export interface RepositoryIntelligence {
   fileCount: number;
   directoryCount: number;
@@ -137,6 +179,7 @@ export interface RepositoryIntelligence {
   peerDependencyCount: number;
   dependencyManifests: string[];
   architecture: RepositoryArchitecture;
+  apiSurface: RepositoryApiSurface;
 }
 
 export interface AnalysisResult extends RepositoryIntelligence {

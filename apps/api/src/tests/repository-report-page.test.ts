@@ -75,6 +75,13 @@ describe('Task 8 - Repository Intelligence Report Logic & Formatters', () => {
         workspaceBoundaries: [],
         apiBoundaries: []
       },
+      apiSurface: {
+        frameworks: [],
+        routes: [],
+        graphql: [],
+        rpc: [],
+        signals: []
+      },
       createdAt: '2026-08-08T22:00:00.000Z',
       updatedAt: '2026-08-08T22:00:00.000Z',
     };

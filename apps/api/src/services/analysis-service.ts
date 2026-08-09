@@ -38,6 +38,7 @@ export interface DBAnalysisResultRow {
   peer_dependency_count?: number;
   dependency_manifests?: string[];
   architecture?: any;
+  api_surface?: any;
   created_at: string;
   updated_at: string;
 }
@@ -190,6 +191,13 @@ export async function saveAnalysisResult(
       workspaceBoundaries: [],
       apiBoundaries: []
     },
+    apiSurface: intelligence.apiSurface || {
+      frameworks: [],
+      routes: [],
+      graphql: [],
+      rpc: [],
+      signals: []
+    },
     createdAt: now,
     updatedAt: now,
   };
@@ -230,6 +238,13 @@ export async function saveAnalysisResult(
       signals: [],
       workspaceBoundaries: [],
       apiBoundaries: []
+    },
+    api_surface: intelligence.apiSurface || {
+      frameworks: [],
+      routes: [],
+      graphql: [],
+      rpc: [],
+      signals: []
     },
     updated_at: now,
   };
@@ -277,6 +292,13 @@ export async function saveAnalysisResult(
       signals: [],
       workspaceBoundaries: [],
       apiBoundaries: []
+    },
+    apiSurface: row.api_surface || {
+      frameworks: [],
+      routes: [],
+      graphql: [],
+      rpc: [],
+      signals: []
     },
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -343,6 +365,13 @@ export async function getAnalysisResultByJobId(jobId: string): Promise<AnalysisR
       signals: [],
       workspaceBoundaries: [],
       apiBoundaries: []
+    },
+    apiSurface: row.api_surface || {
+      frameworks: [],
+      routes: [],
+      graphql: [],
+      rpc: [],
+      signals: []
     },
     createdAt: row.created_at,
     updatedAt: row.updated_at,

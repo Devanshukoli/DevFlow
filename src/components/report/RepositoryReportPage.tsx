@@ -12,6 +12,7 @@ import { ProjectFilesPanel } from './ProjectFilesPanel';
 import { DependencyIntelligencePanel } from './DependencyIntelligencePanel';
 import { ReportSummary } from './ReportSummary';
 import { ArchitectureIntelligenceTab } from './ArchitectureIntelligenceTab';
+import { ApiSurfaceTab } from './ApiSurfaceTab';
 import { ArrowLeft, RefreshCw, AlertTriangle, FileQuestion } from 'lucide-react';
 
 export interface RepositoryReportPageProps {
@@ -26,7 +27,7 @@ export const RepositoryReportPage: React.FC<RepositoryReportPageProps> = ({
   onNavigateHome,
 }) => {
   const [result, setResult] = useState<AnalysisResult | null>(null);
-  const [activeTab, setActiveTab] = useState<'intelligence' | 'architecture'>('intelligence');
+  const [activeTab, setActiveTab] = useState<'intelligence' | 'architecture' | 'api-surface'>('intelligence');
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
   const [isIncomplete, setIsIncomplete] = useState(false);
@@ -310,6 +311,16 @@ export const RepositoryReportPage: React.FC<RepositoryReportPageProps> = ({
           >
             Architecture V1
           </button>
+          <button
+            onClick={() => setActiveTab('api-surface')}
+            className={`px-6 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all font-mono ${
+              activeTab === 'api-surface'
+                ? 'border-emerald-500 text-emerald-400 bg-emerald-500/5'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-500/5'
+            }`}
+          >
+            API Surface
+          </button>
         </div>
 
         {activeTab === 'intelligence' ? (
@@ -352,8 +363,10 @@ export const RepositoryReportPage: React.FC<RepositoryReportPageProps> = ({
             {/* DevFlow Summary Footer Card */}
             <ReportSummary summary={result.summary} />
           </>
-        ) : (
+        ) : activeTab === 'architecture' ? (
           <ArchitectureIntelligenceTab architecture={result.architecture} />
+        ) : (
+          <ApiSurfaceTab apiSurface={result.apiSurface} />
         )}
 
       </main>

@@ -375,6 +375,7 @@ export function generateSummary(
 }
 
 import { extractDependencyIntelligence } from './dependency-extractor.js';
+import { analyzeApiSurface } from './api-surface-analyzer.js';
 
 /**
  * Main entry point: Performs rule-based analysis on cloned repository directory and metadata.
@@ -406,6 +407,7 @@ export async function analyzeRepositoryIntelligence(
   );
 
   const architecture = await analyzeArchitecture(repoDir);
+  const apiSurface = await analyzeApiSurface(repoDir);
 
   return {
     fileCount: metadata.fileCount,
@@ -428,5 +430,6 @@ export async function analyzeRepositoryIntelligence(
     peerDependencyCount: depIntelligence.peerDependencyCount,
     dependencyManifests: depIntelligence.dependencyManifests,
     architecture,
+    apiSurface,
   };
 }
