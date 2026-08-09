@@ -184,12 +184,13 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 
 // Auto-run if executed directly as entrypoint
-const currentFile = fileURLToPath(import.meta.url);
+const metaUrl = (typeof import.meta !== 'undefined' && import.meta?.url) ? import.meta.url : '';
+const currentFile = metaUrl ? fileURLToPath(metaUrl) : '';
 const invokedFile = process.argv[1] ? path.resolve(process.argv[1]) : '';
-const isDirectExecution = 
-  (invokedFile && invokedFile === path.resolve(currentFile)) || 
-  process.argv[1]?.endsWith('worker.ts') || 
-  process.argv[1]?.endsWith('worker.js') || 
+const isDirectExecution =
+  (Boolean(metaUrl) && invokedFile && invokedFile === path.resolve(currentFile)) ||
+  process.argv[1]?.endsWith('worker.ts') ||
+  process.argv[1]?.endsWith('worker.js') ||
   process.argv[1]?.endsWith('worker.cjs') ||
   process.env.DEVFLOW_RUN_WORKER === 'true';
 
