@@ -1,4 +1,5 @@
 import { getGraphInstance } from "../lib/falkordb.js";
+import { getAnalysisResultByJobId } from "./analysis-service.js";
 
 export interface GraphFact {
   type: string;
@@ -18,6 +19,7 @@ export interface StructuredContext {
     relationshipsCount: number;
     queryType: string;
   };
+  repositoryOverview?: any;
 }
 
 /**
@@ -25,6 +27,28 @@ export interface StructuredContext {
  */
 export function classifyQuestion(question: string): string {
   const q = question.toLowerCase();
+
+  // Onboarding/Overview triggers
+  if (
+    q.includes("what is this repository") ||
+    q.includes("what is this project") ||
+    q.includes("how is this repository structured") ||
+    q.includes("how is this project structured") ||
+    q.includes("give me an overview") ||
+    q.includes("how does this codebase work") ||
+    q.includes("what should i know before diving") ||
+    q.includes("where should i start") ||
+    q.includes("what are the main parts of this project") ||
+    q.includes("what are the main parts of this repository") ||
+    q.includes("explain the repository") ||
+    q.includes("explain the codebase") ||
+    q.includes("repository overview") ||
+    q === "what is this" ||
+    q === "where to start" ||
+    q === "where should i start?"
+  ) {
+    return "repository_overview";
+  }
 
   if (
     q.includes("framework") ||
@@ -128,6 +152,14 @@ export function classifyQuestion(question: string): string {
   return "repository_overview";
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
 /**
  * Retrieves the grounded graph context scoped to jobId and classified intent.
  */
@@ -138,6 +170,7 @@ export async function getGraphContext(jobId: string, question: string): Promise<
   const intent = classifyQuestion(question);
   console.log(`[graph-context] Selected intent "${intent}" for question: "${question}"`);
 
+  let repositoryOverviewData: any = undefined;
   let graph;
   try {
     graph = await getGraphInstance(graphName);
@@ -432,6 +465,60 @@ export async function getGraphContext(jobId: string, question: string): Promise<
         });
 
         relsCount = (langs.data?.length || 0) + (fws.data?.length || 0) + (workspaces.data?.length || 0);
+
+        try {
+          const result = await getAnalysisResultByJobId(jobId);
+          if (result) {
+            const commonFiles = [
+              "package.json", "tsconfig.json", "README.md", "Dockerfile", ".gitignore",
+              "docker-compose.yml", "cargo.toml", "go.mod", "requirements.txt",
+              "pyproject.toml", "pom.xml", "build.gradle", "next.config.js", "vite.config.ts"
+            ];
+            const projectFiles = (result.detectedFiles || []).filter((f: string) => {
+              const lower = f.toLowerCase();
+              return commonFiles.some(cf => lower.endsWith(cf.toLowerCase()));
+            });
+
+            repositoryOverviewData = {
+              repository: {
+                name: repoName,
+                applicationType: result.detectedAppType || "General Application",
+                packageManager: result.detectedPackageManager || "N/A",
+                fileCount: result.fileCount || 0,
+                directoryCount: result.directoryCount || 0,
+                sourceSize: formatBytes(result.totalBytes || 0)
+              },
+              languages: (result.detectedLanguages || []).map((l: any) => ({
+                name: typeof l === 'string' ? l : (l.name || l.language || l.name || ""),
+                confidence: l.confidence || "high"
+              })),
+              frameworks: (result.detectedFrameworks || []).map((f: any) => ({
+                name: typeof f === 'string' ? f : (f.name || f.framework || f.name || ""),
+                confidence: f.confidence || "high"
+              })),
+              architecture: (result.architectureHints || []).concat(
+                result.architecture?.signals?.map((s: any) => typeof s === 'string' ? s : (s.name || "")) || []
+              ).filter(Boolean),
+              entryPoints: result.architecture?.entryPoints || [],
+              apiSurface: {
+                routeCount: result.apiSurface?.routes?.length || 0,
+                frameworks: result.apiSurface?.frameworks || []
+              },
+              dependencies: {
+                production: result.productionDependencyCount || 0,
+                development: result.developmentDependencyCount || 0,
+                total: result.dependencyCount || 0
+              },
+              health: {
+                score: result.engineeringHealth?.score || 100,
+                importantRisks: (result.engineeringHealth?.findings || []).map((f: any) => f.title || f.message || "")
+              },
+              projectFiles: projectFiles.slice(0, 15)
+            };
+          }
+        } catch (err) {
+          console.error(`[graph-context] Failed to enrich repository overview context:`, err);
+        }
         break;
       }
     }
@@ -478,5 +565,6 @@ export async function getGraphContext(jobId: string, question: string): Promise<
       relationshipsCount: Math.min(relsCount, 100), // Limit relationships representation count to max 100
       queryType: intent,
     },
+    repositoryOverview: repositoryOverviewData,
   };
 }

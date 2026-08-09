@@ -4,6 +4,13 @@ import { classifyQuestion } from "./graph-context-service.js";
 import { MockAIProvider } from "./ai/llm-provider.js";
 
 test("Intent Classification: accurately classifies various questions", () => {
+  // Onboarding / Overview questions
+  assert.equal(classifyQuestion("How is this repository structured?"), "repository_overview");
+  assert.equal(classifyQuestion("What is this repository?"), "repository_overview");
+  assert.equal(classifyQuestion("Where should I start?"), "repository_overview");
+  assert.equal(classifyQuestion("What should I know before diving in?"), "repository_overview");
+  assert.equal(classifyQuestion("Give me an overview of this repository."), "repository_overview");
+
   // Framework questions
   assert.equal(classifyQuestion("What frameworks does this repo use?"), "frameworks");
   assert.equal(classifyQuestion("Does it use Next.js or React?"), "frameworks");
