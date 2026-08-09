@@ -1,5 +1,6 @@
 import { getSupabaseAdminClient } from '../lib/supabase.js';
 import { RepositoryIntelligence, AnalysisResult } from '@devflow/shared';
+import crypto from 'node:crypto';
 
 export interface DBAnalysisJobRow {
   id: string;
@@ -33,6 +34,17 @@ export interface DBAnalysisResultRow {
   updated_at: string;
 }
 
+export const inMemoryJobs = new Map<string, DBAnalysisJobRow>();
+export const inMemoryResults = new Map<string, AnalysisResult>();
+
+export function isSupabaseConfigured(): boolean {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return false;
+  if (url.includes('your-project.supabase.co') || key.includes('your-service-role-key')) return false;
+  return true;
+}
+
 /**
  * Validates a given input to ensure it is a valid GitHub repository URL.
  * Accepts: https://github.com/<owner>/<repository> (with optional trailing slash)
@@ -60,9 +72,26 @@ export function validateGithubRepositoryUrl(input: unknown): string | null {
 }
 
 /**
- * Inserts a new analysis job row into Supabase.
+ * Inserts a new analysis job row into Supabase or in-memory store.
  */
 export async function createAnalysisJob(repositoryUrl: string): Promise<DBAnalysisJobRow> {
+  if (!isSupabaseConfigured()) {
+    const id = crypto.randomUUID();
+    const newJob: DBAnalysisJobRow = {
+      id,
+      repository_url: repositoryUrl,
+      status: 'queued',
+      progress: 0,
+      current_stage: null,
+      error_message: null,
+      created_at: new Date().toISOString(),
+      started_at: null,
+      completed_at: null,
+    };
+    inMemoryJobs.set(id, newJob);
+    return newJob;
+  }
+
   const supabase = getSupabaseAdminClient();
 
   const { data, error } = await supabase
@@ -85,12 +114,16 @@ export async function createAnalysisJob(repositoryUrl: string): Promise<DBAnalys
 }
 
 /**
- * Fetches an analysis job row from Supabase by UUID.
+ * Fetches an analysis job row by UUID.
  */
 export async function getAnalysisJobById(jobId: string): Promise<DBAnalysisJobRow | null> {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(jobId)) {
     return null;
+  }
+
+  if (!isSupabaseConfigured()) {
+    return inMemoryJobs.get(jobId) || null;
   }
 
   const supabase = getSupabaseAdminClient();
@@ -110,13 +143,39 @@ export async function getAnalysisJobById(jobId: string): Promise<DBAnalysisJobRo
 }
 
 /**
- * Inserts or updates analysis result for a given job in Supabase.
+ * Inserts or updates analysis result for a given job.
  */
 export async function saveAnalysisResult(
   jobId: string,
   repositoryUrl: string,
   intelligence: RepositoryIntelligence
 ): Promise<AnalysisResult> {
+  const now = new Date().toISOString();
+  const resultObj: AnalysisResult = {
+    id: crypto.randomUUID(),
+    jobId,
+    repositoryUrl,
+    fileCount: intelligence.fileCount,
+    directoryCount: intelligence.directoryCount,
+    totalBytes: intelligence.totalBytes,
+    extensionCounts: intelligence.extensionCounts,
+    detectedFiles: intelligence.detectedFiles,
+    detectedLanguages: intelligence.detectedLanguages,
+    detectedFrameworks: intelligence.detectedFrameworks,
+    detectedPackageManager: intelligence.detectedPackageManager,
+    detectedAppType: intelligence.detectedAppType,
+    apiSurfaceHints: intelligence.apiSurfaceHints,
+    architectureHints: intelligence.architectureHints,
+    summary: intelligence.summary,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  if (!isSupabaseConfigured()) {
+    inMemoryResults.set(jobId, resultObj);
+    return resultObj;
+  }
+
   const supabase = getSupabaseAdminClient();
 
   const payload = {
@@ -134,7 +193,7 @@ export async function saveAnalysisResult(
     api_surface_hints: intelligence.apiSurfaceHints,
     architecture_hints: intelligence.architectureHints,
     summary: intelligence.summary,
-    updated_at: new Date().toISOString(),
+    updated_at: now,
   };
 
   const { data, error } = await supabase
@@ -172,12 +231,16 @@ export async function saveAnalysisResult(
 }
 
 /**
- * Fetches analysis result row from Supabase by job_id.
+ * Fetches analysis result row by job_id.
  */
 export async function getAnalysisResultByJobId(jobId: string): Promise<AnalysisResult | null> {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(jobId)) {
     return null;
+  }
+
+  if (!isSupabaseConfigured()) {
+    return inMemoryResults.get(jobId) || null;
   }
 
   const supabase = getSupabaseAdminClient();

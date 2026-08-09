@@ -3,6 +3,12 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { configureApiRoutes } from "./apps/api/src/index.js";
 
+try {
+  process.loadEnvFile();
+} catch {
+  // Ignore if .env file is missing
+}
+
 async function startServer() {
   const app = express();
   const PORT = 3000;

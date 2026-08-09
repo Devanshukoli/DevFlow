@@ -1,3 +1,9 @@
+try {
+  process.loadEnvFile();
+} catch {
+  // Ignore if .env file is missing
+}
+
 import {
   claimNextQueuedJob,
   updateJobProgress,

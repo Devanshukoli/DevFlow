@@ -5,19 +5,16 @@ import { Button } from '../ui/button';
 
 export interface RepositoryInputProps {
   onSubmitUrl?: (url: string) => void;
+  onAnalysisCreated?: (jobId: string) => void;
 }
 
-export interface QueuedJobState {
-  jobId: string;
-  status: string;
-  repositoryUrl: string;
-}
-
-export const RepositoryInput: React.FC<RepositoryInputProps> = ({ onSubmitUrl }) => {
+export const RepositoryInput: React.FC<RepositoryInputProps> = ({
+  onSubmitUrl,
+  onAnalysisCreated,
+}) => {
   const [url, setUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [jobState, setJobState] = useState<QueuedJobState | null>(null);
 
   const validateGithubUrl = (input: string): boolean => {
     const trimmed = input.trim();
@@ -30,7 +27,6 @@ export const RepositoryInput: React.FC<RepositoryInputProps> = ({ onSubmitUrl })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setJobState(null);
 
     const trimmed = url.trim();
 
@@ -59,14 +55,18 @@ export const RepositoryInput: React.FC<RepositoryInputProps> = ({ onSubmitUrl })
       const payload = await response.json();
 
       if (response.ok && payload.ok) {
-        const queuedJob: QueuedJobState = {
-          jobId: payload.data.jobId,
-          status: payload.data.status,
-          repositoryUrl: trimmed,
-        };
-        setJobState(queuedJob);
+        const createdJobId = payload.data.jobId;
+
         if (onSubmitUrl) {
           onSubmitUrl(trimmed);
+        }
+
+        if (onAnalysisCreated) {
+          onAnalysisCreated(createdJobId);
+        } else {
+          // Direct navigation to /analysis/:jobId
+          window.history.pushState({}, '', `/analysis/${createdJobId}`);
+          window.dispatchEvent(new Event('popstate'));
         }
       } else {
         const errorMessage =
@@ -84,7 +84,6 @@ export const RepositoryInput: React.FC<RepositoryInputProps> = ({ onSubmitUrl })
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUrl(e.target.value);
     if (error) setError(null);
-    if (jobState) setJobState(null);
   };
 
   const isValidInput = validateGithubUrl(url);
@@ -122,35 +121,6 @@ export const RepositoryInput: React.FC<RepositoryInputProps> = ({ onSubmitUrl })
           </Button>
         </div>
       </form>
-
-      {/* Temporary Success Bridge: Queued Job Display */}
-      {jobState && (
-        <div className="p-4 rounded-lg bg-[#111722] border border-emerald-500/30 space-y-2 text-xs font-mono shadow-lg text-left">
-          <div className="flex items-center justify-between text-emerald-400 font-bold">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>ANALYSIS QUEUED</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-wider uppercase">
-              <Clock className="w-3 h-3 text-emerald-400" />
-              <span>STATUS: {jobState.status}</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-300 pt-2 border-t border-[#1a2333]">
-            <div>
-              <span className="text-slate-500 block text-[10px] uppercase font-semibold">Job ID</span>
-              <span className="font-bold text-white tracking-wide">{jobState.jobId}</span>
-            </div>
-            <div>
-              <span className="text-slate-500 block text-[10px] uppercase font-semibold">Target Repository</span>
-              <span className="font-medium text-slate-200 truncate block">
-                {jobState.repositoryUrl.replace(/^https?:\/\/github\.com\//i, '')}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Helper text under input */}
       <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 px-1">

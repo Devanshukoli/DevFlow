@@ -1,11 +1,23 @@
 import { getSupabaseAdminClient } from '../lib/supabase.js';
-import { DBAnalysisJobRow } from './analysis-service.js';
+import { DBAnalysisJobRow, isSupabaseConfigured, inMemoryJobs } from './analysis-service.js';
 
 /**
  * Finds a queued job and atomically attempts to claim it by changing status to 'running'.
  * Returns the claimed job or null if no queued job exists or another worker claimed it first.
  */
 export async function claimNextQueuedJob(): Promise<DBAnalysisJobRow | null> {
+  if (!isSupabaseConfigured()) {
+    const queuedJob = Array.from(inMemoryJobs.values()).find((j) => j.status === 'queued');
+    if (!queuedJob) return null;
+
+    queuedJob.status = 'running';
+    queuedJob.started_at = new Date().toISOString();
+    queuedJob.progress = 5;
+    queuedJob.current_stage = 'Preparing repository';
+    inMemoryJobs.set(queuedJob.id, queuedJob);
+    return queuedJob;
+  }
+
   const supabase = getSupabaseAdminClient();
 
   // 1. Fetch oldest queued job candidate
@@ -51,6 +63,15 @@ export async function updateJobProgress(
   progress: number,
   currentStage: string
 ): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    const job = inMemoryJobs.get(jobId);
+    if (job) {
+      job.progress = progress;
+      job.current_stage = currentStage;
+    }
+    return;
+  }
+
   const supabase = getSupabaseAdminClient();
 
   const { error } = await supabase
@@ -70,6 +91,18 @@ export async function updateJobProgress(
  * Marks job as completed with 100% progress and completion timestamp.
  */
 export async function markJobCompleted(jobId: string): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    const job = inMemoryJobs.get(jobId);
+    if (job) {
+      job.status = 'completed';
+      job.progress = 100;
+      job.current_stage = 'Completed';
+      job.completed_at = new Date().toISOString();
+      job.error_message = null;
+    }
+    return;
+  }
+
   const supabase = getSupabaseAdminClient();
 
   const { error } = await supabase
@@ -96,12 +129,23 @@ export async function markJobFailed(
   errorMessage: string,
   failureProgress = 10
 ): Promise<void> {
-  const supabase = getSupabaseAdminClient();
-
   // Sanitize error message to exclude internal system details/paths
   const sanitized = errorMessage
     .replace(/\/[\w.-]+\/[\w.-]+/g, '[redacted-path]')
     .slice(0, 500);
+
+  if (!isSupabaseConfigured()) {
+    const job = inMemoryJobs.get(jobId);
+    if (job) {
+      job.status = 'failed';
+      job.current_stage = 'Analysis failed';
+      job.error_message = sanitized || 'Analysis execution encountered an error.';
+      job.progress = failureProgress;
+    }
+    return;
+  }
+
+  const supabase = getSupabaseAdminClient();
 
   const { error } = await supabase
     .from('analysis_jobs')
