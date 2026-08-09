@@ -148,3 +148,128 @@ analysisRouter.get('/analysis/:jobId/result', async (req: Request, res: Response
   }
 });
 
+/**
+ * GET /api/analysis/:jobId/graph
+ * Fetches the interactive visualization data (nodes and links) for a job's knowledge graph.
+ */
+analysisRouter.get('/analysis/:jobId/graph', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store');
+  try {
+    const { jobId } = req.params;
+    const { getGraphVisual } = await import('../services/graph-query-service.js');
+    const graphData = await getGraphVisual(jobId);
+    return res.status(200).json({
+      ok: true,
+      data: graphData,
+    });
+  } catch (err: any) {
+    console.error('Error in GET /api/analysis/:jobId/graph:', err);
+    return res.status(500).json({
+      ok: false,
+      error: {
+        code: 'GRAPH_FETCH_FAILED',
+        message: 'Unable to retrieve repository knowledge graph.',
+      },
+    });
+  }
+});
+
+/**
+ * GET /api/analysis/:jobId/graph/query
+ * Executes a pre-defined safe read-only Cypher query template on the job's knowledge graph.
+ */
+analysisRouter.get('/analysis/:jobId/graph/query', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store');
+  try {
+    const { jobId } = req.params;
+    const { type } = req.query;
+
+    if (!type || typeof type !== 'string') {
+      return res.status(400).json({
+        ok: false,
+        error: {
+          code: 'MISSING_QUERY_TYPE',
+          message: 'Query parameter "type" is required.',
+        },
+      });
+    }
+
+    const { getPredefinedQueryResults } = await import('../services/graph-query-service.js');
+    try {
+      const results = await getPredefinedQueryResults(jobId, type);
+      return res.status(200).json({
+        ok: true,
+        data: results,
+      });
+    } catch (innerErr: any) {
+      return res.status(400).json({
+        ok: false,
+        error: {
+          code: 'INVALID_QUERY_TYPE',
+          message: innerErr.message || 'Unsupported query type.',
+        },
+      });
+    }
+  } catch (err: any) {
+    console.error('Error in GET /api/analysis/:jobId/graph/query:', err);
+    return res.status(500).json({
+      ok: false,
+      error: {
+        code: 'GRAPH_QUERY_FAILED',
+        message: 'Unable to execute safe predefined query.',
+      },
+    });
+  }
+});
+
+/**
+ * GET /api/stats
+ * Aggregates overall FalkorDB graph statistics across the system.
+ */
+analysisRouter.get('/stats', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store');
+  try {
+    const { getFalkorDBClient } = await import('../lib/falkordb.js');
+    const client = await getFalkorDBClient();
+    const activeGraphs = await client.list();
+
+    let totalNodes = 0;
+    let totalRelationships = 0;
+
+    for (const graphName of activeGraphs) {
+      try {
+        const graph = client.selectGraph(graphName);
+        const nodesReply = await graph.query<any>("MATCH (n) RETURN count(n) as count");
+        totalNodes += Number(nodesReply.data?.[0]?.count ?? 0);
+
+        const relsReply = await graph.query<any>("MATCH ()-[r]->() RETURN count(r) as count");
+        totalRelationships += Number(relsReply.data?.[0]?.count ?? 0);
+      } catch (err) {
+        // ignore individual graph failures
+      }
+    }
+
+    return res.status(200).json({
+      ok: true,
+      data: {
+        activeGraphs: activeGraphs.length,
+        graphNames: activeGraphs,
+        totalNodes,
+        totalRelationships,
+      },
+    });
+  } catch (err: any) {
+    console.error('Error in GET /api/stats:', err);
+    return res.status(200).json({
+      ok: true,
+      data: {
+        activeGraphs: 0,
+        graphNames: [],
+        totalNodes: 0,
+        totalRelationships: 0,
+        warning: 'FalkorDB is currently unavailable or unconfigured.',
+      },
+    });
+  }
+});
+

@@ -219,6 +219,13 @@ export async function saveAnalysisResult(
 
   if (!isSupabaseConfigured()) {
     inMemoryResults.set(jobId, resultObj);
+    // Trigger FalkorDB graph build in a fail-safe way
+    import('./graph-builder.js').then(({ buildGraph }) => {
+      console.log(`[analysis-service] Building graph for job ${jobId} (in-memory)...`);
+      return buildGraph(jobId);
+    }).catch((graphErr) => {
+      console.error(`[analysis-service] Graph build failed for job ${jobId} (non-fatal):`, graphErr);
+    });
     return resultObj;
   }
 
@@ -290,6 +297,16 @@ export async function saveAnalysisResult(
   }
 
   const row = data as DBAnalysisResultRow;
+
+  // Trigger FalkorDB graph build in a fail-safe way
+  import('./graph-builder.js').then(({ buildGraph }) => {
+    console.log(`[analysis-service] Building graph for job ${jobId}...`);
+    return buildGraph(jobId);
+  }).then(() => {
+    console.log(`[analysis-service] Graph build completed successfully for job ${jobId}.`);
+  }).catch((graphErr) => {
+    console.error(`[analysis-service] Graph build failed for job ${jobId} (non-fatal):`, graphErr);
+  });
 
   return {
     id: row.id,
