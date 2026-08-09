@@ -1,70 +1,106 @@
-# DevFlow — Monorepo Foundation
+# DevFlow
 
-A clean, production-ready full-stack monorepo architecture built with React, Node.js, Express, TypeScript, and Supabase.
+Turn an unfamiliar GitHub repository into an interactive engineering map.
 
-## 🏗️ Architecture & Structure
+- **Live Demo:** [DevFlow App](https://ais-pre-zcx2yle33cjlarz6q3w7ye-236135050293.asia-southeast1.run.app)
+- **GitHub Repository:** [GitHub Repository](https://github.com/eko-dev/devflow)
+- **Hackathon:** WeMakeDevs × Zerops
+
+---
+
+## The Problem
+
+Understanding an unfamiliar repository requires manually exploring and cross-referencing:
+- README files and fragmented documentation
+- Package manifests across monorepo packages and subdirectories
+- Directory structures, entry points, and routing modules
+- Core services, API endpoints, and middleware layers
+- External dependencies and architecture boundaries
+
+This manual overhead becomes overwhelming when onboarding to large codebases, evaluating open-source libraries, or exploring unfamiliar tech stacks with sparse documentation.
+
+---
+
+## The Solution
+
+DevFlow automates repository comprehension by turning raw source code into structured engineering intelligence and interactive architectural maps.
 
 ```
-├── apps/
-│   ├── web/               # React + Vite + TypeScript Frontend Application
-│   └── api/               # Node.js + Express + TypeScript Backend API Service
-├── packages/
-│   └── shared/            # Shared Types, Utilities, & Analysis Job Schema
-├── supabase/
-│   └── migrations/        # SQL Migrations for Supabase (analysis_jobs & analysis_results)
-├── server.ts              # Unified Dev & Production Container Server Gateway (Port 3000)
-├── pnpm-workspace.yaml    # pnpm workspace definition (apps/*, packages/*)
-├── package.json           # Monorepo Workspaces & Root Scripts
-└── .env.example           # Environment variable template
+GitHub Repository
+        ↓
+Analysis Job
+        ↓
+Repository Inspection
+        ↓
+Repository Intelligence
+        ↓
+Architecture + API Analysis
+        ↓
+FalkorDB Knowledge Graph
+        ↓
+Interactive Repository Report
+        ↓
+Ask DevFlow
 ```
 
-## 🔄 Analysis Job Lifecycle
+1. **Deterministic Extraction**: DevFlow clones and statically inspects the codebase to extract exact facts about languages, frameworks, dependencies, package managers, and API routes without relying on ungrounded AI guesses.
+2. **Knowledge Graph Projection**: Extracted facts and structural relationships are projected into a **FalkorDB** graph database.
+3. **Graph-Grounded Q&A ("Ask DevFlow")**: When users ask questions about the repository, DevFlow queries the FalkorDB knowledge graph for exact factual context before passing it to Gemini, ensuring precise, grounded answers rather than generic hallucinations.
 
-DevFlow tracks repository analysis jobs through the following state pipeline:
+---
 
+## What DevFlow Provides
+
+- **Repository Intelligence**: Comprehensive breakdown of repository purpose, structure, and classification.
+- **Language & Framework Detection**: Extension mapping and framework identification with confidence scoring.
+- **Dependency Intelligence**: Multi-manifest manifest parsing for Node.js, Python, Rust, Go, Java, and more.
+- **Architecture Intelligence**: Workspace layout analysis, decoupled client/server inspection, and containerization detection.
+- **API Surface Intelligence**: Automated route detection across controllers, handlers, and API endpoints.
+- **Repository Health Signals**: Evaluation of CI workflows, Docker setups, and standard project configuration files.
+- **Interactive Architecture Visualization**: Dynamic visual maps powered by D3.
+- **FalkorDB Knowledge Graph**: Robust graph-based entity and relationship storage.
+- **Graph-Grounded AI Questions**: Context-aware querying via Gemini backed by real graph facts.
+- **Asynchronous Repository Analysis**: Robust background worker architecture managing job state transitions.
+- **Analysis Progress Tracking**: Real-time state updates across queued, running, completed, and failed stages.
+
+---
+
+## How It Works
+
+```mermaid
+flowchart TD
+    A[GitHub Repository] --> B[Analysis API]
+    B --> C[Supabase Job]
+    C --> D[Background Worker]
+    D --> E[Repository Inspection]
+
+    E --> F[Repository Intelligence]
+    F --> G[Architecture Intelligence]
+    F --> H[API Surface Intelligence]
+    F --> I[Dependency Intelligence]
+
+    F --> J[Supabase]
+    F --> K[FalkorDB]
+
+    K --> L[Knowledge Graph]
+    L --> M[Repository Report]
+    L --> N[Ask DevFlow]
+
+    N --> O[Gemini]
 ```
-[queued] ──> (worker claim) ──> [running] ──> (clone + inspect + intelligence) ──> [completed] / [failed]
-```
 
-- **`queued`**: Initial job created upon user submission (`POST /api/analysis`).
-- **`running`**: Worker picks up the job and executes cloning, metadata collection, intelligence derivation, and persistence.
-- **`completed`**: Analysis finished successfully and intelligence result is persisted in Supabase (`analysis_results`).
-- **`failed`**: Job encountered an unrecoverable failure during execution.
+---
 
-## 🧠 Repository Intelligence v1
-
-The worker (`apps/api/src/worker.ts`) and intelligence analyzer (`apps/api/src/services/intelligence-analyzer.ts`) extract deterministic, structured insights from cloned repository filesystems without external LLM dependencies:
-
-- **Languages**: Extension frequency mapping ranked with confidence scores (`high` / `medium` / `low`).
-- **Frameworks**: Dependency detection from `package.json` and key project configuration markers.
-- **Package Manager**: Deterministic detection (`pnpm`, `npm`, `yarn`, `bun`, `cargo`, `pip`, `go modules`, `maven`, `gradle`).
-- **Application Type**: Categorization into `monorepo`, `full-stack app`, `backend API`, `frontend app`, `CLI tool`, `library/package`, or `documentation site`.
-- **API Surface Hints**: Routing directory detection (`routes/`, `controllers/`, `handlers/`, `api/`) and framework structure analysis.
-- **Architecture Hints**: Workspace layout boundaries, decoupled client/server setups, containerization (`Dockerfile`, `docker-compose`), and shared module detection.
-- **Summary**: Concise, factual single-sentence summary of the repository.
-
-## 🌐 API Endpoints
-
-- `POST /api/analysis`: Creates a new repository analysis job.
-- `GET /api/analysis/:jobId`: Retrieves job status and progress.
-- `GET /api/analysis/:jobId/result`: Retrieves computed repository intelligence result for a completed job.
-
-## 🔒 Supabase & Environment Security
-
-- **Backend Privileged Client**: Server-side job operations execute via `SUPABASE_SERVICE_ROLE_KEY` in `apps/api/src/lib/supabase.ts`.
-- **Zero Browser Exposure**: The `SUPABASE_SERVICE_ROLE_KEY` exists exclusively in backend environment configurations and is never imported or exposed in client bundles.
-- **Row Level Security (RLS)**: Enabled on `analysis_jobs` and `analysis_results` tables. Direct public/anonymous client mutations are disabled.
-
-## 🛠️ Development & Commands
+## Local Development & Setup
 
 ```bash
 # Install workspace dependencies with pnpm
-pnpm install
+pnpm install --frozen-lockfile
 
-# Terminal 1: Start full-stack development server (API + Web on Port 3000)
+# Start full-stack development server (API + Web on Port 3000)
 pnpm run dev
 
-# Terminal 2: Start background analysis worker
+# Start background analysis worker
 pnpm run worker
 
 # Run typecheck across all workspace packages
@@ -73,53 +109,15 @@ pnpm run lint
 # Run unit tests
 pnpm test
 
-# Build production bundle (Web assets + API server bundle)
+# Build production bundle
 pnpm run build
 ```
 
-## 🚀 Production Deployment (Zerops)
+---
 
-DevFlow is fully configured for multi-service production deployment on **Zerops** using `/zerops.yaml`.
+## Production Deployment (Zerops)
 
-### Architecture Flow
-```
-[Frontend (Static SPA)] ──(HTTP)──> [API Service (Node.js Express)]
-                                             │
-                                    (Job Polling / Supabase)
-                                             │
-                                             ▼
-                                    [Worker Service (Node.js Background)]
-                                             │
-                                   ┌─────────┼─────────┐
-                                   ▼         ▼         ▼
-                               Supabase   FalkorDB   Gemini AI
-```
-
-### Zerops Services Overview (`zerops.yaml`)
-1. **`frontend` (Zerops Static Service)**:
-   - Builds Vite frontend assets (`pnpm build`).
-   - Serves the generated `dist/` directory with built-in SPA routing fallback.
-2. **`api` (Zerops Node.js Service)**:
-   - Runs the Express API server on `process.env.PORT` (binding to `0.0.0.0`).
-   - Exposes public API routes and liveness health check at `GET /health`.
-   - Secured with CORS via `WEB_ORIGIN`.
-3. **`worker` (Zerops Node.js Service)**:
-   - Runs `pnpm worker` (`apps/api/src/worker.ts`) as a continuous background job processing loop.
-   - Does not expose public HTTP ports or health checks.
-   - Requires Supabase service-role credentials and FalkorDB configuration.
-
-### Health Endpoint
-- **`GET /health`**: Returns HTTP 200 `{ "ok": true, "service": "devflow-api", "status": "online" }`. Used by Zerops container liveness health checks.
-
-### Required Production Environment Variables
-- `NODE_ENV=production`
-- `PORT=3000`
-- `WEB_ORIGIN=https://<frontend-zerops-domain>`
-- `DEVFLOW_RUN_WORKER=false` (for API service instances)
-- `SUPABASE_URL=`
-- `SUPABASE_SERVICE_ROLE_KEY=`
-- `FALKORDB_URL=` / credentials
-- `GEMINI_API_KEY=`
-- `VITE_API_BASE_URL=https://<api-zerops-domain>` (for frontend build)
-
-
+DevFlow is fully configured for zero-downtime, multi-service deployment on **Zerops** using `zerops.yaml`:
+- **`frontend`**: Static SPA deployment powered by Vite.
+- **`api`**: Node.js 22 Express API server handling analysis endpoints and health checks (`GET /health`).
+- **`worker`**: Background Node.js 22 job processing daemon.
