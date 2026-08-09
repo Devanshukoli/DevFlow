@@ -273,3 +273,105 @@ analysisRouter.get('/stats', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * POST /api/analysis/:jobId/ask
+ * Grounded QA about the repository.
+ */
+analysisRouter.post('/analysis/:jobId/ask', async (req: Request, res: Response) => {
+  try {
+    const { jobId } = req.params;
+    const { question } = req.body || {};
+
+    // Validate jobId
+    if (!jobId || typeof jobId !== 'string' || jobId.trim().length < 5) {
+      return res.status(400).json({
+        ok: false,
+        error: {
+          code: 'INVALID_REQUEST',
+          message: 'A valid analysis jobId is required.',
+        },
+      });
+    }
+
+    // Validate question
+    if (!question || typeof question !== 'string' || question.trim().length < 3) {
+      return res.status(400).json({
+        ok: false,
+        error: {
+          code: 'INVALID_REQUEST',
+          message: 'A question of at least 3 characters is required.',
+        },
+      });
+    }
+
+    if (question.length > 500) {
+      return res.status(400).json({
+        ok: false,
+        error: {
+          code: 'INVALID_REQUEST',
+          message: 'Question exceeds maximum allowed length of 500 characters.',
+        },
+      });
+    }
+
+    // 1. Graph retrieval layer
+    let context;
+    try {
+      const { getGraphContext } = await import('../services/graph-context-service.js');
+      context = await getGraphContext(jobId, question);
+    } catch (err: any) {
+      console.error(`[ask-api] Graph retrieval failed for job ${jobId}:`, err);
+      return res.status(503).json({
+        ok: false,
+        error: {
+          code: 'GRAPH_CONTEXT_UNAVAILABLE',
+          message: 'Repository graph context is currently unavailable.',
+        },
+      });
+    }
+
+    // 2. AI Provider instantiation & response generation
+    try {
+      const { GeminiAIProvider } = await import('../services/ai/llm-provider.js');
+      const provider = new GeminiAIProvider();
+      
+      const aiResult = await provider.generateAnswer(context, question);
+      
+      return res.status(200).json({
+        ok: true,
+        data: {
+          question,
+          intent: context.questionIntent,
+          answer: aiResult.answer,
+          evidence: aiResult.evidence,
+          confidence: aiResult.confidence,
+          contextStats: {
+            factsCount: context.metadata?.factsCount || 0,
+            relationshipsCount: context.metadata?.relationshipsCount || 0,
+            queryType: context.metadata?.queryType || context.questionIntent,
+          }
+        },
+      });
+    } catch (err: any) {
+      console.error(`[ask-api] AI Generation failed for job ${jobId}:`, err);
+      return res.status(503).json({
+        ok: false,
+        error: {
+          code: 'AI_PROVIDER_UNAVAILABLE',
+          message: 'DevFlow could not generate an answer right now.',
+        },
+      });
+    }
+  } catch (err: any) {
+    console.error('Unexpected error in /api/analysis/:jobId/ask:', err);
+    return res.status(500).json({
+      ok: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'An unexpected internal error occurred.',
+      },
+    });
+  }
+});
+
+

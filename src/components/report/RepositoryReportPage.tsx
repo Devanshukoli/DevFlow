@@ -15,6 +15,7 @@ import { ArchitectureIntelligenceTab } from './ArchitectureIntelligenceTab';
 import { ApiSurfaceTab } from './ApiSurfaceTab';
 import { EngineeringHealthTab } from './EngineeringHealthTab';
 import { RepositoryGraphTab } from './RepositoryGraphTab';
+import { AskDevFlowPanel } from './AskDevFlowPanel';
 import { ArrowLeft, RefreshCw, AlertTriangle, FileQuestion } from 'lucide-react';
 
 export interface RepositoryReportPageProps {
@@ -290,6 +291,9 @@ export const RepositoryReportPage: React.FC<RepositoryReportPageProps> = ({
           detectedAppType={result.detectedAppType}
           detectedPackageManager={result.detectedPackageManager}
         />
+
+        {/* AI-powered Q&A Assistant */}
+        <AskDevFlowPanel jobId={jobId} />
 
         {/* Tab Selection Navigation */}
         <div className="flex border-b border-[#1c2738]">
