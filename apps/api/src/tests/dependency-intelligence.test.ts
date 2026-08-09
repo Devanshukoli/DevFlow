@@ -183,60 +183,170 @@ require github.com/stretchr/testify v1.9.0
     assert.equal(junitDep?.type, 'development');
   });
 
-  test('extractDependencyIntelligence handles monorepo, ignored dirs, duplicates, and malformed files', async () => {
-    const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'devflow-dep-test-'));
+  test('extractDependencyIntelligence handles monorepo setup with multiple nested manifests', async () => {
+    const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'devflow-dep-monorepo-'));
 
     try {
-      // Create root package.json
+      // 1. Root package.json
       await fs.promises.writeFile(
         path.join(tmpDir, 'package.json'),
         JSON.stringify({
-          dependencies: { react: '^19.0.0' },
-          devDependencies: { typescript: '^5.8.0' },
+          name: 'monorepo-root',
+          workspaces: ['packages/*'],
+          devDependencies: { turbo: '^1.10.0' }
         })
       );
 
-      // Create apps/api/package.json (monorepo manifest)
-      await fs.promises.mkdir(path.join(tmpDir, 'apps', 'api'), { recursive: true });
+      // 2. packages/shared package.json
+      await fs.promises.mkdir(path.join(tmpDir, 'packages', 'shared'), { recursive: true });
       await fs.promises.writeFile(
-        path.join(tmpDir, 'apps', 'api', 'package.json'),
+        path.join(tmpDir, 'packages', 'shared', 'package.json'),
         JSON.stringify({
-          dependencies: { express: '^5.1.0', react: '^19.0.0' }, // Duplicate react
+          name: '@scope/shared',
+          dependencies: { lodash: '^4.17.21' }
         })
       );
 
-      // Create ignored node_modules manifest that should NOT be parsed
-      await fs.promises.mkdir(path.join(tmpDir, 'node_modules', 'express'), { recursive: true });
+      // 3. packages/app/Cargo.toml (Rust crate nested inside monorepo)
+      await fs.promises.mkdir(path.join(tmpDir, 'packages', 'app'), { recursive: true });
       await fs.promises.writeFile(
-        path.join(tmpDir, 'node_modules', 'express', 'package.json'),
-        JSON.stringify({ name: 'express', dependencies: { mime: '1.0' } })
-      );
+        path.join(tmpDir, 'packages', 'app', 'Cargo.toml'),
+        `
+[package]
+name = "rust-app"
+version = "0.1.0"
 
-      // Create malformed manifest
-      await fs.promises.mkdir(path.join(tmpDir, 'apps', 'web'), { recursive: true });
-      await fs.promises.writeFile(
-        path.join(tmpDir, 'apps', 'web', 'package.json'),
-        '{ INVALID JSON syntax...'
+[dependencies]
+tokio = "1.35.0"
+`
       );
 
       const result = await extractDependencyIntelligence(tmpDir);
 
-      // Manifests detected: root package.json, apps/api/package.json, apps/web/package.json (node_modules ignored)
+      // Verify discovered manifests are exact relative paths
+      assert.equal(result.dependencyManifests.length, 3);
       assert.ok(result.dependencyManifests.includes('package.json'));
-      assert.ok(result.dependencyManifests.includes('apps/api/package.json'));
-      assert.ok(!result.dependencyManifests.some((m) => m.includes('node_modules')));
+      assert.ok(result.dependencyManifests.includes('packages/shared/package.json'));
+      assert.ok(result.dependencyManifests.includes('packages/app/Cargo.toml'));
 
-      // Duplicate 'react' preserved with different sources
-      const reactDeps = result.dependencies.filter((d) => d.name === 'react');
-      assert.equal(reactDeps.length, 2);
-      assert.ok(reactDeps.some((d) => d.source === 'package.json'));
-      assert.ok(reactDeps.some((d) => d.source === 'apps/api/package.json'));
+      // Verify dependencies are extracted correctly with corresponding sources
+      const turboDep = result.dependencies.find((d) => d.name === 'turbo');
+      const lodashDep = result.dependencies.find((d) => d.name === 'lodash');
+      const tokioDep = result.dependencies.find((d) => d.name === 'tokio');
 
-      // Metrics counts
-      assert.equal(result.dependencyCount, 4); // react(root), typescript(root), express(api), react(api)
-      assert.equal(result.productionDependencyCount, 3); // react(root), express(api), react(api)
-      assert.equal(result.developmentDependencyCount, 1); // typescript(root)
+      assert.ok(turboDep);
+      assert.equal(turboDep?.source, 'package.json');
+      assert.equal(turboDep?.type, 'development');
 
+      assert.ok(lodashDep);
+      assert.equal(lodashDep?.source, 'packages/shared/package.json');
+      assert.equal(lodashDep?.type, 'production');
+
+      assert.ok(tokioDep);
+      assert.equal(tokioDep?.source, 'packages/app/Cargo.toml');
+      assert.equal(tokioDep?.type, 'production');
+
+      assert.equal(result.dependencyCount, 3);
+      assert.equal(result.productionDependencyCount, 2); // lodash, tokio
+      assert.equal(result.developmentDependencyCount, 1); // turbo
+    } finally {
+      await fs.promises.rm(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  test('extractDependencyIntelligence handles malformed manifests safely without crashing', async () => {
+    const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'devflow-dep-malformed-'));
+
+    try {
+      // 1. Malformed JSON package.json
+      await fs.promises.writeFile(
+        path.join(tmpDir, 'package.json'),
+        '{ name: "stale-json", dependencies: { "react": "^19.0.0" ' // Missing closing braces
+      );
+
+      // 2. Malformed Cargo.toml
+      await fs.promises.writeFile(
+        path.join(tmpDir, 'Cargo.toml'),
+        `
+[dependencies
+serde = "1.0"
+` // Missing closing square bracket for section header
+      );
+
+      // 3. Malformed requirements.txt (empty or invalid lines)
+      await fs.promises.writeFile(
+        path.join(tmpDir, 'requirements.txt'),
+        `
+# Invalid requirements
+-r non-existent-file.txt
+===invalid-format===
+`
+      );
+
+      // 4. Malformed pyproject.toml
+      await fs.promises.writeFile(
+        path.join(tmpDir, 'pyproject.toml'),
+        `
+[tool.poetry.dependencies]
+= "invalid-key-value"
+`
+      );
+
+      const result = await extractDependencyIntelligence(tmpDir);
+
+      // Manifests are still identified as dependency manifests, but dependencies parsed from malformed blocks are skipped safely
+      assert.ok(result.dependencyManifests.includes('package.json'));
+      assert.ok(result.dependencyManifests.includes('Cargo.toml'));
+      assert.ok(result.dependencyManifests.includes('requirements.txt'));
+      assert.ok(result.dependencyManifests.includes('pyproject.toml'));
+
+      // Assert that we did not crash and no partial/malformed dependencies are returned
+      assert.equal(result.dependencies.length, 0);
+      assert.equal(result.dependencyCount, 0);
+    } finally {
+      await fs.promises.rm(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  test('extractDependencyIntelligence ignores specific directories and handles oversized files', async () => {
+    const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'devflow-dep-ignored-'));
+
+    try {
+      // 1. Create a valid root package.json
+      await fs.promises.writeFile(
+        path.join(tmpDir, 'package.json'),
+        JSON.stringify({
+          dependencies: { express: '^5.0.0' }
+        })
+      );
+
+      // 2. Create ignored folder content (.git, node_modules)
+      await fs.promises.mkdir(path.join(tmpDir, 'node_modules', 'foo'), { recursive: true });
+      await fs.promises.writeFile(
+        path.join(tmpDir, 'node_modules', 'foo', 'package.json'),
+        JSON.stringify({ dependencies: { bar: '^1.0.0' } })
+      );
+
+      await fs.promises.mkdir(path.join(tmpDir, '.git', 'hooks'), { recursive: true });
+      await fs.promises.writeFile(
+        path.join(tmpDir, '.git', 'package.json'),
+        JSON.stringify({ dependencies: { bar: '^1.0.0' } })
+      );
+
+      // 3. Create an oversized requirements.txt (exceeding 1MB safety cap)
+      const oversizedContent = 'a'.repeat(1024 * 1024 + 100); // 1MB + 100 bytes
+      await fs.promises.writeFile(
+        path.join(tmpDir, 'requirements.txt'),
+        oversizedContent
+      );
+
+      const result = await extractDependencyIntelligence(tmpDir);
+
+      // The bar dependency inside node_modules and .git is ignored. requirements.txt is skipped due to size.
+      assert.equal(result.dependencyManifests.length, 1);
+      assert.equal(result.dependencyManifests[0], 'package.json');
+      assert.equal(result.dependencyCount, 1);
+      assert.equal(result.dependencies[0].name, 'express');
     } finally {
       await fs.promises.rm(tmpDir, { recursive: true, force: true });
     }
