@@ -36,14 +36,14 @@ zerops:
         httpGet:
           port: 3000
           path: /health
-      start: pnpm start
+      start: pnpm run start
 
   - setup: worker
     build:
       base: nodejs@22
       buildCommands:
         - pnpm install --frozen-lockfile
-        - pnpm build
+        - pnpm run build
       deployFiles:
         - dist
         - package.json
