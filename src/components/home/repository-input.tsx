@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, ArrowRight, CheckCircle2, Clock } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
+import { getApiUrl } from '../../utils/api';
 
 export interface RepositoryInputProps {
   onSubmitUrl?: (url: string) => void;
@@ -44,7 +45,7 @@ export const RepositoryInput: React.FC<RepositoryInputProps> = ({
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/analysis', {
+      const response = await fetch(getApiUrl('/api/analysis'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

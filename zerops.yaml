@@ -1,0 +1,50 @@
+zerops:
+  - setup: frontend
+    build:
+      base: nodejs@20
+      buildCommands:
+        - pnpm install --frozen-lockfile || pnpm install
+        - pnpm build
+      deployFiles: dist
+    run:
+      base: static
+      type: spa
+
+  - setup: api
+    build:
+      base: nodejs@20
+      buildCommands:
+        - pnpm install --frozen-lockfile || pnpm install
+        - pnpm build
+      deployFiles:
+        - dist
+        - package.json
+        - node_modules
+        - apps
+        - packages
+    run:
+      base: nodejs@20
+      ports:
+        - port: 3000
+          http: true
+      readinessCheck:
+        httpGet:
+          port: 3000
+          path: /health
+      start: pnpm start
+
+  - setup: worker
+    build:
+      base: nodejs@20
+      buildCommands:
+        - pnpm install --frozen-lockfile || pnpm install
+        - pnpm build
+      deployFiles:
+        - dist
+        - package.json
+        - node_modules
+        - apps
+        - packages
+    run:
+      base: nodejs@20
+      start: pnpm worker

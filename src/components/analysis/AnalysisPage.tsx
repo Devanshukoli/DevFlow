@@ -8,6 +8,7 @@ import { AnalysisCompleteView } from './AnalysisCompleteView';
 import { AnalysisFailedView } from './AnalysisFailedView';
 import { evaluateWorkerStages } from './stages';
 import { GetAnalysisJobSuccessResponse } from '@devflow/shared';
+import { getApiUrl } from '../../utils/api';
 
 export interface AnalysisPageProps {
   jobId: string;
@@ -53,7 +54,7 @@ export const AnalysisPage: React.FC<AnalysisPageProps> = ({ jobId, onNavigateHom
     abortControllerRef.current = controller;
 
     try {
-      const response = await fetch(`/api/analysis/${jobId}`, {
+      const response = await fetch(getApiUrl(`/api/analysis/${jobId}`), {
         signal: controller.signal,
       });
 

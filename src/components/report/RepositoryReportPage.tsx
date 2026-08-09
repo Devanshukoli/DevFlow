@@ -17,6 +17,7 @@ import { EngineeringHealthTab } from './EngineeringHealthTab';
 import { RepositoryGraphTab } from './RepositoryGraphTab';
 import { AskDevFlowPanel } from './AskDevFlowPanel';
 import { ArrowLeft, RefreshCw, AlertTriangle, FileQuestion } from 'lucide-react';
+import { getApiUrl } from '../../utils/api';
 
 export interface RepositoryReportPageProps {
   jobId: string;
@@ -52,7 +53,7 @@ export const RepositoryReportPage: React.FC<RepositoryReportPageProps> = ({
     setFetchError(null);
 
     try {
-      const response = await fetch(`/api/analysis/${jobId}/result`, {
+      const response = await fetch(getApiUrl(`/api/analysis/${jobId}/result`), {
         signal: controller.signal,
       });
 

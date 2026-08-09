@@ -77,3 +77,49 @@ pnpm test
 pnpm run build
 ```
 
+## 🚀 Production Deployment (Zerops)
+
+DevFlow is fully configured for multi-service production deployment on **Zerops** using `/zerops.yaml`.
+
+### Architecture Flow
+```
+[Frontend (Static SPA)] ──(HTTP)──> [API Service (Node.js Express)]
+                                             │
+                                    (Job Polling / Supabase)
+                                             │
+                                             ▼
+                                    [Worker Service (Node.js Background)]
+                                             │
+                                   ┌─────────┼─────────┐
+                                   ▼         ▼         ▼
+                               Supabase   FalkorDB   Gemini AI
+```
+
+### Zerops Services Overview (`zerops.yaml`)
+1. **`frontend` (Zerops Static Service)**:
+   - Builds Vite frontend assets (`pnpm build`).
+   - Serves the generated `dist/` directory with built-in SPA routing fallback.
+2. **`api` (Zerops Node.js Service)**:
+   - Runs the Express API server on `process.env.PORT` (binding to `0.0.0.0`).
+   - Exposes public API routes and liveness health check at `GET /health`.
+   - Secured with CORS via `WEB_ORIGIN`.
+3. **`worker` (Zerops Node.js Service)**:
+   - Runs `pnpm worker` (`apps/api/src/worker.ts`) as a continuous background job processing loop.
+   - Does not expose public HTTP ports or health checks.
+   - Requires Supabase service-role credentials and FalkorDB configuration.
+
+### Health Endpoint
+- **`GET /health`**: Returns HTTP 200 `{ "ok": true, "service": "devflow-api", "status": "online" }`. Used by Zerops container liveness health checks.
+
+### Required Production Environment Variables
+- `NODE_ENV=production`
+- `PORT=3000`
+- `WEB_ORIGIN=https://<frontend-zerops-domain>`
+- `DEVFLOW_RUN_WORKER=false` (for API service instances)
+- `SUPABASE_URL=`
+- `SUPABASE_SERVICE_ROLE_KEY=`
+- `FALKORDB_URL=` / credentials
+- `GEMINI_API_KEY=`
+- `VITE_API_BASE_URL=https://<api-zerops-domain>` (for frontend build)
+
+

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, ThumbsUp, ThumbsDown, Bookmark, CheckCircle2, Sparkles, Send, Eye, Clock, Share2, Code } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Question, Answer, User } from '../types';
+import { getApiUrl } from '../utils/api';
 
 interface QuestionDetailsProps {
   question: Question;
@@ -48,7 +49,7 @@ export const QuestionDetails: React.FC<QuestionDetailsProps> = ({
     setAiError(null);
 
     try {
-      const res = await fetch('/api/ai-answer', {
+      const res = await fetch(getApiUrl('/api/ai-answer'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

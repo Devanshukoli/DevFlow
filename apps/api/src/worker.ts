@@ -180,8 +180,20 @@ function registerShutdownListeners() {
   process.on('SIGTERM', () => handleShutdown('SIGTERM'));
 }
 
+import { fileURLToPath } from 'url';
+import path from 'path';
+
 // Auto-run if executed directly as entrypoint
-if (import.meta.url === `file://${process.argv[1]}`) {
+const currentFile = fileURLToPath(import.meta.url);
+const invokedFile = process.argv[1] ? path.resolve(process.argv[1]) : '';
+const isDirectExecution = 
+  (invokedFile && invokedFile === path.resolve(currentFile)) || 
+  process.argv[1]?.endsWith('worker.ts') || 
+  process.argv[1]?.endsWith('worker.js') || 
+  process.argv[1]?.endsWith('worker.cjs') ||
+  process.env.DEVFLOW_RUN_WORKER === 'true';
+
+if (isDirectExecution) {
   registerShutdownListeners();
   runWorkerLoop().catch((err) => {
     console.error('[worker] fatal worker process failure:', err);

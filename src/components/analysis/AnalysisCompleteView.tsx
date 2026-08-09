@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle2, ArrowRight, Code2, Layers, Cpu, FileCode2, ExternalLink } from 'lucide-react';
 import { Button } from '../ui/button';
 import { AnalysisResult } from '@devflow/shared';
+import { getApiUrl } from '../../utils/api';
 
 export interface AnalysisCompleteViewProps {
   jobId: string;
@@ -31,7 +32,7 @@ export const AnalysisCompleteView: React.FC<AnalysisCompleteViewProps> = ({
     let isMounted = true;
     const fetchResult = async () => {
       try {
-        const res = await fetch(`/api/analysis/${jobId}/result`);
+        const res = await fetch(getApiUrl(`/api/analysis/${jobId}/result`));
         if (res.ok) {
           const json = await res.json();
           if (isMounted && json.ok) {

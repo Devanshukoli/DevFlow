@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Brain, HelpCircle, Send, Database, CheckCircle, AlertTriangle, ArrowRight, Activity } from "lucide-react";
 import Markdown from "react-markdown";
+import { getApiUrl } from "../../utils/api";
 
 interface EvidenceItem {
   type: string;
@@ -45,7 +46,7 @@ export const AskDevFlowPanel: React.FC<AskDevFlowPanelProps> = ({ jobId }) => {
     setError(null);
 
     try {
-      const response = await fetch(`/api/analysis/${jobId}/ask`, {
+      const response = await fetch(getApiUrl(`/api/analysis/${jobId}/ask`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: qText }),

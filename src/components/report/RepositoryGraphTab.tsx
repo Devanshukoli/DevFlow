@@ -16,6 +16,7 @@ import {
   Clock,
   Play
 } from 'lucide-react';
+import { getApiUrl } from '../../utils/api';
 
 interface RepositoryGraphTabProps {
   jobId: string;
@@ -72,7 +73,7 @@ export const RepositoryGraphTab: React.FC<RepositoryGraphTabProps> = ({ jobId })
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/analysis/${jobId}/graph`);
+        const res = await fetch(getApiUrl(`/api/analysis/${jobId}/graph`));
         if (!res.ok) throw new Error('Failed to load graph data.');
         const json = await res.json();
         if (json.ok && active) {
@@ -104,7 +105,7 @@ export const RepositoryGraphTab: React.FC<RepositoryGraphTabProps> = ({ jobId })
     setQueryLoading(true);
     setQueryResults(null);
     try {
-      const res = await fetch(`/api/analysis/${jobId}/graph/query?type=${queryType}`);
+      const res = await fetch(getApiUrl(`/api/analysis/${jobId}/graph/query?type=${queryType}`));
       if (!res.ok) throw new Error('Query execution failed.');
       const json = await res.json();
       if (json.ok) {
