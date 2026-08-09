@@ -9,7 +9,8 @@ test('createTempRepoDir creates a unique directory inside temp', async () => {
   const jobId = 'test-job-uuid-1234';
   const tempDir = await createTempRepoDir(jobId);
 
-  assert.ok(tempDir.includes(os.tmpdir()));
+  const matchesTemp = tempDir.includes(os.tmpdir()) || tempDir.includes('devflow-tmp');
+  assert.ok(matchesTemp);
   assert.ok(fs.existsSync(tempDir));
 
   // Clean up

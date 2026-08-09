@@ -4,12 +4,27 @@ import os from 'node:os';
 import path from 'node:path';
 
 /**
+ * Returns the resolved short base temporary directory.
+ * On Windows, this prefers a short system drive root path (e.g., C:\devflow-tmp)
+ * to avoid path-length limitations in AppData/Local/Temp.
+ */
+export function getTempBaseDir(): string {
+  if (os.platform() === 'win32') {
+    const drive = process.env.SystemDrive || 'C:';
+    return path.join(drive, 'devflow-tmp');
+  }
+  return path.join(os.tmpdir(), 'devflow-jobs');
+}
+
+/**
  * Creates a unique, safe temporary directory path for an analysis job.
  */
 export async function createTempRepoDir(jobId: string): Promise<string> {
   const sanitizedJobId = jobId.replace(/[^a-zA-Z0-9-]/g, '');
-  const tempBaseDir = path.join(os.tmpdir(), 'devflow-jobs');
+  const tempBaseDir = getTempBaseDir();
+  console.log(`[worker] clone root resolved: ${tempBaseDir}`);
   const jobDir = path.join(tempBaseDir, sanitizedJobId);
+  console.log(`[worker] clone target path: ${jobDir}`);
 
   await fs.promises.mkdir(jobDir, { recursive: true });
   return jobDir;
@@ -23,10 +38,20 @@ export async function cleanupTempDir(dirPath: string): Promise<void> {
   if (!dirPath) return;
 
   const resolvedPath = path.resolve(dirPath);
-  const tempBaseDir = path.resolve(os.tmpdir());
+  const tempBaseDir = path.resolve(getTempBaseDir());
+  const fallbackBaseDir = path.resolve(os.tmpdir(), 'devflow-jobs');
 
-  // Security guard: Ensure target directory is inside system temp directory
-  if (!resolvedPath.startsWith(tempBaseDir)) {
+  // Prevent accidental deletion of the base folders themselves
+  if (resolvedPath === tempBaseDir || resolvedPath === fallbackBaseDir) {
+    console.error(`Refusing to clean up base directory directly: ${dirPath}`);
+    return;
+  }
+
+  // Security guard: Ensure target directory is inside allowed temporary directory bounds
+  const isInsideTempBase = resolvedPath.startsWith(tempBaseDir + path.sep) || resolvedPath === tempBaseDir;
+  const isInsideFallback = resolvedPath.startsWith(fallbackBaseDir + path.sep) || resolvedPath === fallbackBaseDir;
+
+  if (!isInsideTempBase && !isInsideFallback) {
     console.error(`Refusing to clean up directory outside tmp bounds: ${dirPath}`);
     return;
   }
@@ -50,6 +75,8 @@ export async function cloneRepository(
   if (/@/.test(repositoryUrl)) {
     throw new Error('REPOSITORY_URL_CONTAINS_CREDENTIALS');
   }
+
+  console.log('[worker] starting git clone');
 
   return new Promise<void>((resolve, reject) => {
     let processKilled = false;
@@ -86,6 +113,8 @@ export async function cloneRepository(
     child.on('close', (code) => {
       clearTimeout(timer);
       if (processKilled) return;
+
+      console.log(`[worker] git clone exited with code ${code}`);
 
       if (code === 0) {
         resolve();
