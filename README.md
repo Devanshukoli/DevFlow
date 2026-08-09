@@ -33,6 +33,26 @@ DevFlow tracks repository analysis jobs through the following state pipeline:
 
 > **Note**: The worker and analysis execution pipeline are intentionally not implemented yet. Task 4 establishes the job foundation, API contracts, Supabase persistence schema, and frontend queue integration.
 
+## ⚙️ Analysis Worker Process
+
+The worker (`apps/api/src/worker.ts`) is a separate background process responsible for asynchronous repository processing.
+
+### Responsibilities:
+- Acquire queued jobs safely using conditional updates (`status = 'queued'`)
+- Shallow clone public GitHub repositories (`git clone --depth 1`) using safe process spawning
+- Inspect repository filesystem structure and detect common project files
+- Collect deterministic file/directory counts, total byte size, and extension metrics
+- Transition job status and progress through deterministic stages (5% → 20% → 35% → 50% → 70% → 90% → 100%)
+- Clean up temporary job directories in a `finally` block
+- Handle failures gracefully without crashing the worker process
+
+### Current Limitations:
+- No AI / LLM calls
+- No AST parsing
+- No dependency graph generation
+- No architecture analysis diagrams
+- No real-time WebSockets / SSE transport
+
 ## 🔒 Supabase & Environment Security
 
 - **Backend Privileged Client**: Server-side job operations execute via `SUPABASE_SERVICE_ROLE_KEY` in `apps/api/src/lib/supabase.ts`.
@@ -45,14 +65,18 @@ DevFlow tracks repository analysis jobs through the following state pipeline:
 # Install workspace dependencies with pnpm
 pnpm install
 
-# Start full-stack development server (API + Web on Port 3000)
+# Terminal 1: Start full-stack development server (API + Web on Port 3000)
 pnpm run dev
+
+# Terminal 2: Start background analysis worker
+pnpm run worker
+# or: pnpm --filter @devflow/api worker
 
 # Run typecheck across all workspace packages
 pnpm run lint
 
 # Run unit tests
-npx tsx --test apps/api/src/services/analysis-service.test.ts
+npx tsx --test apps/api/src/services/*.test.ts
 
 # Build production bundle (Web assets + API server bundle)
 pnpm run build
