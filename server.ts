@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { configureApiRoutes } from "./apps/api/src/index.js";
+import { runWorkerLoop } from "./apps/api/src/worker.js";
 
 try {
   process.loadEnvFile();
@@ -35,6 +36,11 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`DevFlow Monorepo server running on http://0.0.0.0:${PORT}`);
+  });
+
+  // Start worker loop in background for single-container preview environment
+  runWorkerLoop().catch((err) => {
+    console.error("[server] Worker loop error:", err);
   });
 }
 

@@ -54,6 +54,7 @@ analysisRouter.post('/analysis', async (req: Request, res: Response) => {
  * Fetches current analysis job state by jobId.
  */
 analysisRouter.get('/analysis/:jobId', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store');
   try {
     const { jobId } = req.params;
 
@@ -99,6 +100,7 @@ analysisRouter.get('/analysis/:jobId', async (req: Request, res: Response) => {
  * Fetches computed repository intelligence result for a completed analysis job.
  */
 analysisRouter.get('/analysis/:jobId/result', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store');
   try {
     const { jobId } = req.params;
 

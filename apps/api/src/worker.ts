@@ -13,16 +13,59 @@ import {
 import { createTempRepoDir, cloneRepository, cleanupTempDir } from './services/git-service.js';
 import { inspectRepository } from './services/repo-inspector.js';
 import { analyzeRepositoryIntelligence } from './services/intelligence-analyzer.js';
-import { DBAnalysisJobRow, saveAnalysisResult } from './services/analysis-service.js';
+import {
+  DBAnalysisJobRow,
+  saveAnalysisResult,
+  isSupabaseConfigured,
+} from './services/analysis-service.js';
+import { getSupabaseAdminClient } from './lib/supabase.js';
 
 let isShuttingDown = false;
 let isProcessingJob = false;
 
 /**
+ * Verifies Supabase configuration and tests database connectivity.
+ */
+export async function verifyWorkerEnvironment(): Promise<boolean> {
+  console.log('[worker] DevFlow analysis worker started');
+
+  if (!isSupabaseConfigured()) {
+    console.log('[worker] Supabase configuration loaded (in-memory mode)');
+    return true;
+  }
+
+  console.log('[worker] Supabase configuration loaded');
+
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { error } = await supabase.from('analysis_jobs').select('id').limit(1);
+
+    if (error) {
+      const sanitizedError = (error.message || 'Database query error').replace(
+        /\/[\w.-]+\/[\w.-]+/g,
+        '[redacted-path]'
+      );
+      console.error(`[worker] Supabase connection failed: ${sanitizedError}`);
+      return false;
+    }
+
+    console.log('[worker] Supabase connection verified');
+    return true;
+  } catch (err: any) {
+    const sanitizedError = (err?.message || 'Connection exception').replace(
+      /\/[\w.-]+\/[\w.-]+/g,
+      '[redacted-path]'
+    );
+    console.error(`[worker] Supabase connection failed: ${sanitizedError}`);
+    return false;
+  }
+}
+
+/**
  * Executes full analysis lifecycle on a claimed job.
  */
 export async function processJob(job: DBAnalysisJobRow): Promise<void> {
-  console.log(`[worker] claimed job ${job.id} for repository ${job.repository_url}`);
+  console.log(`[worker] claimed job ${job.id}`);
 
   let tempDir: string | null = null;
   let currentProgress = 5;
@@ -84,12 +127,16 @@ export async function processJob(job: DBAnalysisJobRow): Promise<void> {
   }
 }
 
-
 /**
  * Polling loop that continuously checks for and processes queued jobs.
  */
 export async function runWorkerLoop(pollIntervalMs = 2000): Promise<void> {
-  console.log('[worker] started. Polling for queued analysis jobs...');
+  const isEnvOk = await verifyWorkerEnvironment();
+  if (!isEnvOk) {
+    console.error('[worker] Missing required environment configuration or database connection failed.');
+  }
+
+  console.log(`[worker] polling every ${pollIntervalMs}ms`);
 
   while (!isShuttingDown) {
     try {
