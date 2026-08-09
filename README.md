@@ -2,7 +2,7 @@
 
 Turn an unfamiliar GitHub repository into an interactive engineering map.
 
-- **Live Demo:** [DevFlow App](https://ais-pre-zcx2yle33cjlarz6q3w7ye-236135050293.asia-southeast1.run.app)
+- **Live Demo:** [DevFlow App](https://www.youtube.com/watch?v=ALLFFHlokaU)
 - **GitHub Repository:** [GitHub Repository](https://github.com/eko-dev/devflow)
 - **Hackathon:** WeMakeDevs × Zerops
 
