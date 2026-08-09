@@ -37,6 +37,7 @@ export interface DBAnalysisResultRow {
   optional_dependency_count?: number;
   peer_dependency_count?: number;
   dependency_manifests?: string[];
+  architecture?: any;
   created_at: string;
   updated_at: string;
 }
@@ -181,6 +182,14 @@ export async function saveAnalysisResult(
     optionalDependencyCount: intelligence.optionalDependencyCount || 0,
     peerDependencyCount: intelligence.peerDependencyCount || 0,
     dependencyManifests: intelligence.dependencyManifests || [],
+    architecture: intelligence.architecture || {
+      tree: [],
+      importantDirectories: [],
+      entryPoints: [],
+      signals: [],
+      workspaceBoundaries: [],
+      apiBoundaries: []
+    },
     createdAt: now,
     updatedAt: now,
   };
@@ -214,6 +223,14 @@ export async function saveAnalysisResult(
     optional_dependency_count: intelligence.optionalDependencyCount || 0,
     peer_dependency_count: intelligence.peerDependencyCount || 0,
     dependency_manifests: intelligence.dependencyManifests || [],
+    architecture: intelligence.architecture || {
+      tree: [],
+      importantDirectories: [],
+      entryPoints: [],
+      signals: [],
+      workspaceBoundaries: [],
+      apiBoundaries: []
+    },
     updated_at: now,
   };
 
@@ -253,6 +270,14 @@ export async function saveAnalysisResult(
     optionalDependencyCount: row.optional_dependency_count ?? 0,
     peerDependencyCount: row.peer_dependency_count ?? 0,
     dependencyManifests: row.dependency_manifests || [],
+    architecture: row.architecture || {
+      tree: [],
+      importantDirectories: [],
+      entryPoints: [],
+      signals: [],
+      workspaceBoundaries: [],
+      apiBoundaries: []
+    },
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -311,6 +336,14 @@ export async function getAnalysisResultByJobId(jobId: string): Promise<AnalysisR
     optionalDependencyCount: row.optional_dependency_count ?? 0,
     peerDependencyCount: row.peer_dependency_count ?? 0,
     dependencyManifests: row.dependency_manifests || [],
+    architecture: row.architecture || {
+      tree: [],
+      importantDirectories: [],
+      entryPoints: [],
+      signals: [],
+      workspaceBoundaries: [],
+      apiBoundaries: []
+    },
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

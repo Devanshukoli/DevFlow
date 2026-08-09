@@ -6,6 +6,7 @@ import {
   DetectedFramework,
 } from '@devflow/shared';
 import { RepositoryMetadata, IGNORED_DIRECTORIES } from './repo-inspector.js';
+import { analyzeArchitecture } from './architecture-analyzer.js';
 
 interface PackageJsonData {
   name?: string;
@@ -404,6 +405,8 @@ export async function analyzeRepositoryIntelligence(
     detectedAppType
   );
 
+  const architecture = await analyzeArchitecture(repoDir);
+
   return {
     fileCount: metadata.fileCount,
     directoryCount: metadata.directoryCount,
@@ -424,5 +427,6 @@ export async function analyzeRepositoryIntelligence(
     optionalDependencyCount: depIntelligence.optionalDependencyCount,
     peerDependencyCount: depIntelligence.peerDependencyCount,
     dependencyManifests: depIntelligence.dependencyManifests,
+    architecture,
   };
 }

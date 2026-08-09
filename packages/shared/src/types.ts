@@ -74,6 +74,48 @@ export interface RepositoryDependency {
   source: string;
 }
 
+export interface ArchitectureTreeNode {
+  name: string;
+  path: string;
+  type: 'file' | 'directory';
+  children?: ArchitectureTreeNode[];
+}
+
+export interface ArchitectureDirectory {
+  path: string;
+  name: string;
+  classification: string;
+  confidence: 'high' | 'medium' | 'low';
+}
+
+export interface ArchitectureSignal {
+  name: string;
+  description: string;
+}
+
+export interface ArchitectureEntryPoint {
+  path: string;
+  type: 'file' | 'script';
+  description?: string;
+}
+
+export interface ArchitectureWorkspace {
+  path: string;
+  name: string;
+  type: 'frontend' | 'backend' | 'library' | 'unknown';
+  detectedLanguage?: string;
+  detectedFramework?: string;
+}
+
+export interface RepositoryArchitecture {
+  tree: ArchitectureTreeNode[];
+  importantDirectories: ArchitectureDirectory[];
+  entryPoints: ArchitectureEntryPoint[];
+  signals: ArchitectureSignal[];
+  workspaceBoundaries: ArchitectureWorkspace[];
+  apiBoundaries: string[];
+}
+
 export interface RepositoryIntelligence {
   fileCount: number;
   directoryCount: number;
@@ -94,6 +136,7 @@ export interface RepositoryIntelligence {
   optionalDependencyCount: number;
   peerDependencyCount: number;
   dependencyManifests: string[];
+  architecture: RepositoryArchitecture;
 }
 
 export interface AnalysisResult extends RepositoryIntelligence {

@@ -11,6 +11,7 @@ import { ApiSurfacePanel } from './ApiSurfacePanel';
 import { ProjectFilesPanel } from './ProjectFilesPanel';
 import { DependencyIntelligencePanel } from './DependencyIntelligencePanel';
 import { ReportSummary } from './ReportSummary';
+import { ArchitectureIntelligenceTab } from './ArchitectureIntelligenceTab';
 import { ArrowLeft, RefreshCw, AlertTriangle, FileQuestion } from 'lucide-react';
 
 export interface RepositoryReportPageProps {
@@ -25,6 +26,7 @@ export const RepositoryReportPage: React.FC<RepositoryReportPageProps> = ({
   onNavigateHome,
 }) => {
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [activeTab, setActiveTab] = useState<'intelligence' | 'architecture'>('intelligence');
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
   const [isIncomplete, setIsIncomplete] = useState(false);
@@ -286,43 +288,73 @@ export const RepositoryReportPage: React.FC<RepositoryReportPageProps> = ({
           detectedPackageManager={result.detectedPackageManager}
         />
 
-        {/* Primary Analysis Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          
-          {/* Left Column: Languages, Frameworks, Extension Distribution */}
-          <div className="space-y-6">
-            <LanguagesPanel detectedLanguages={result.detectedLanguages} />
-            <FrameworksPanel detectedFrameworks={result.detectedFrameworks} />
-            <ExtensionDistribution
-              extensionCounts={result.extensionCounts}
-              totalFiles={result.fileCount}
-            />
-          </div>
-
-          {/* Right Column: Structural & API Signals */}
-          <div className="space-y-6">
-            <ArchitectureSignals architectureHints={result.architectureHints} />
-            <ApiSurfacePanel apiSurfaceHints={result.apiSurfaceHints} />
-          </div>
-
+        {/* Tab Selection Navigation */}
+        <div className="flex border-b border-[#1c2738]">
+          <button
+            onClick={() => setActiveTab('intelligence')}
+            className={`px-6 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all font-mono ${
+              activeTab === 'intelligence'
+                ? 'border-emerald-500 text-emerald-400 bg-emerald-500/5'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-500/5'
+            }`}
+          >
+            Intelligence Report
+          </button>
+          <button
+            onClick={() => setActiveTab('architecture')}
+            className={`px-6 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all font-mono ${
+              activeTab === 'architecture'
+                ? 'border-emerald-500 text-emerald-400 bg-emerald-500/5'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-500/5'
+            }`}
+          >
+            Architecture V1
+          </button>
         </div>
 
-        {/* Dependency Intelligence Panel */}
-        <DependencyIntelligencePanel
-          dependencies={result.dependencies}
-          dependencyCount={result.dependencyCount}
-          productionDependencyCount={result.productionDependencyCount}
-          developmentDependencyCount={result.developmentDependencyCount}
-          optionalDependencyCount={result.optionalDependencyCount}
-          peerDependencyCount={result.peerDependencyCount}
-          dependencyManifests={result.dependencyManifests}
-        />
+        {activeTab === 'intelligence' ? (
+          <>
+            {/* Primary Analysis Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+              
+              {/* Left Column: Languages, Frameworks, Extension Distribution */}
+              <div className="space-y-6">
+                <LanguagesPanel detectedLanguages={result.detectedLanguages} />
+                <FrameworksPanel detectedFrameworks={result.detectedFrameworks} />
+                <ExtensionDistribution
+                  extensionCounts={result.extensionCounts}
+                  totalFiles={result.fileCount}
+                />
+              </div>
 
-        {/* Project Files Panel */}
-        <ProjectFilesPanel detectedFiles={result.detectedFiles} />
+              {/* Right Column: Structural & API Signals */}
+              <div className="space-y-6">
+                <ArchitectureSignals architectureHints={result.architectureHints} />
+                <ApiSurfacePanel apiSurfaceHints={result.apiSurfaceHints} />
+              </div>
 
-        {/* DevFlow Summary Footer Card */}
-        <ReportSummary summary={result.summary} />
+            </div>
+
+            {/* Dependency Intelligence Panel */}
+            <DependencyIntelligencePanel
+              dependencies={result.dependencies}
+              dependencyCount={result.dependencyCount}
+              productionDependencyCount={result.productionDependencyCount}
+              developmentDependencyCount={result.developmentDependencyCount}
+              optionalDependencyCount={result.optionalDependencyCount}
+              peerDependencyCount={result.peerDependencyCount}
+              dependencyManifests={result.dependencyManifests}
+            />
+
+            {/* Project Files Panel */}
+            <ProjectFilesPanel detectedFiles={result.detectedFiles} />
+
+            {/* DevFlow Summary Footer Card */}
+            <ReportSummary summary={result.summary} />
+          </>
+        ) : (
+          <ArchitectureIntelligenceTab architecture={result.architecture} />
+        )}
 
       </main>
 

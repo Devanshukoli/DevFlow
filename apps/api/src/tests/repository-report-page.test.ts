@@ -67,6 +67,14 @@ describe('Task 8 - Repository Intelligence Report Logic & Formatters', () => {
       optionalDependencyCount: 0,
       peerDependencyCount: 0,
       dependencyManifests: ['Cargo.toml', 'pyproject.toml'],
+      architecture: {
+        tree: [],
+        importantDirectories: [],
+        entryPoints: [],
+        signals: [],
+        workspaceBoundaries: [],
+        apiBoundaries: []
+      },
       createdAt: '2026-08-08T22:00:00.000Z',
       updatedAt: '2026-08-08T22:00:00.000Z',
     };
