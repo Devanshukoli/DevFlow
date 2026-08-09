@@ -32,7 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Navigation Actions */}
         <nav className="flex items-center gap-3">
           <a
-            href="https://github.com"
+            href="https://github.com/devanshukoli/devflow"
             target="_blank"
             rel="noopener noreferrer"
             className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors px-2.5 py-1.5 rounded-md hover:bg-[#17202e]"
