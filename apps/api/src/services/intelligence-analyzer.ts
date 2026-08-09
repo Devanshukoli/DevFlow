@@ -376,6 +376,7 @@ export function generateSummary(
 
 import { extractDependencyIntelligence } from './dependency-extractor.js';
 import { analyzeApiSurface } from './api-surface-analyzer.js';
+import { analyzeEngineeringHealth } from './engineering-health-analyzer.js';
 
 /**
  * Main entry point: Performs rule-based analysis on cloned repository directory and metadata.
@@ -408,6 +409,16 @@ export async function analyzeRepositoryIntelligence(
 
   const architecture = await analyzeArchitecture(repoDir);
   const apiSurface = await analyzeApiSurface(repoDir);
+  
+  const engineeringHealth = await analyzeEngineeringHealth(
+    repoDir,
+    metadata,
+    depIntelligence.dependencies,
+    architecture,
+    apiSurface,
+    detectedAppType,
+    pkgData
+  );
 
   return {
     fileCount: metadata.fileCount,
@@ -431,5 +442,6 @@ export async function analyzeRepositoryIntelligence(
     dependencyManifests: depIntelligence.dependencyManifests,
     architecture,
     apiSurface,
+    engineeringHealth,
   };
 }

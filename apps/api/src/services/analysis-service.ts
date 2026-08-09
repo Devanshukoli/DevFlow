@@ -39,6 +39,7 @@ export interface DBAnalysisResultRow {
   dependency_manifests?: string[];
   architecture?: any;
   api_surface?: any;
+  engineering_health?: any;
   created_at: string;
   updated_at: string;
 }
@@ -198,6 +199,20 @@ export async function saveAnalysisResult(
       rpc: [],
       signals: []
     },
+    engineeringHealth: intelligence.engineeringHealth || {
+      score: 100,
+      dimensions: [],
+      findings: [],
+      positiveSignals: [],
+      metrics: {
+        testFileCount: 0,
+        testDirectoryCount: 0,
+        detectedTestingFrameworks: [],
+        largeSourceFilesCount: 0,
+        hasEnvFiles: false,
+        hasPrivateKeys: false
+      }
+    },
     createdAt: now,
     updatedAt: now,
   };
@@ -245,6 +260,20 @@ export async function saveAnalysisResult(
       graphql: [],
       rpc: [],
       signals: []
+    },
+    engineering_health: intelligence.engineeringHealth || {
+      score: 100,
+      dimensions: [],
+      findings: [],
+      positiveSignals: [],
+      metrics: {
+        testFileCount: 0,
+        testDirectoryCount: 0,
+        detectedTestingFrameworks: [],
+        largeSourceFilesCount: 0,
+        hasEnvFiles: false,
+        hasPrivateKeys: false
+      }
     },
     updated_at: now,
   };
@@ -299,6 +328,20 @@ export async function saveAnalysisResult(
       graphql: [],
       rpc: [],
       signals: []
+    },
+    engineeringHealth: row.engineering_health || {
+      score: 100,
+      dimensions: [],
+      findings: [],
+      positiveSignals: [],
+      metrics: {
+        testFileCount: 0,
+        testDirectoryCount: 0,
+        detectedTestingFrameworks: [],
+        largeSourceFilesCount: 0,
+        hasEnvFiles: false,
+        hasPrivateKeys: false
+      }
     },
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -372,6 +415,20 @@ export async function getAnalysisResultByJobId(jobId: string): Promise<AnalysisR
       graphql: [],
       rpc: [],
       signals: []
+    },
+    engineeringHealth: row.engineering_health || {
+      score: 100,
+      dimensions: [],
+      findings: [],
+      positiveSignals: [],
+      metrics: {
+        testFileCount: 0,
+        testDirectoryCount: 0,
+        detectedTestingFrameworks: [],
+        largeSourceFilesCount: 0,
+        hasEnvFiles: false,
+        hasPrivateKeys: false
+      }
     },
     createdAt: row.created_at,
     updatedAt: row.updated_at,

@@ -158,6 +158,49 @@ export interface RepositoryApiSurface {
   signals: ApiSurfaceSignal[];
 }
 
+export type HealthSeverity = 'critical' | 'high' | 'medium' | 'low' | 'info';
+
+export interface RiskFinding {
+  id: string;
+  category: string;
+  severity: HealthSeverity;
+  title: string;
+  description: string;
+  evidence: string[];
+  confidence: 'high' | 'medium' | 'low';
+  scoreImpact: number;
+}
+
+export interface HealthDimension {
+  name: string;
+  score: number;
+  maxScore: number;
+  description?: string;
+}
+
+export interface HealthSignal {
+  name: string;
+  evidence: string[];
+}
+
+export interface EngineeringHealthMetrics {
+  testFileCount: number;
+  testDirectoryCount: number;
+  detectedTestingFrameworks: string[];
+  largeSourceFilesCount: number;
+  hasEnvFiles: boolean;
+  hasPrivateKeys: boolean;
+  [key: string]: any;
+}
+
+export interface EngineeringHealth {
+  score: number;
+  dimensions: HealthDimension[];
+  findings: RiskFinding[];
+  positiveSignals: HealthSignal[];
+  metrics: EngineeringHealthMetrics;
+}
+
 export interface RepositoryIntelligence {
   fileCount: number;
   directoryCount: number;
@@ -180,6 +223,7 @@ export interface RepositoryIntelligence {
   dependencyManifests: string[];
   architecture: RepositoryArchitecture;
   apiSurface: RepositoryApiSurface;
+  engineeringHealth: EngineeringHealth;
 }
 
 export interface AnalysisResult extends RepositoryIntelligence {

@@ -82,6 +82,20 @@ describe('Task 8 - Repository Intelligence Report Logic & Formatters', () => {
         rpc: [],
         signals: []
       },
+      engineeringHealth: {
+        score: 100,
+        dimensions: [],
+        findings: [],
+        positiveSignals: [],
+        metrics: {
+          testFileCount: 0,
+          testDirectoryCount: 0,
+          detectedTestingFrameworks: [],
+          largeSourceFilesCount: 0,
+          hasEnvFiles: false,
+          hasPrivateKeys: false
+        }
+      },
       createdAt: '2026-08-08T22:00:00.000Z',
       updatedAt: '2026-08-08T22:00:00.000Z',
     };
