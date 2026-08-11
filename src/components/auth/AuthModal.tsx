@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Lock, Mail, Shield, AlertCircle, ArrowRight, CheckCircle2, UserCheck } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/button';
@@ -32,6 +33,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
   const [signUpNotice, setSignUpNotice] = useState<string | null>(null);
   const [isSignUpSubmitting, setIsSignUpSubmitting] = useState(false);
 
+  // Focus & Accessibility Refs
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousActiveElementRef = useRef<HTMLElement | null>(null);
+
   // Populate prefilled email when modal opens or tab changes
   useEffect(() => {
     if (prefilledEmail) {
@@ -39,6 +44,95 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
       setSignUpEmail(prefilledEmail);
     }
   }, [prefilledEmail, isAuthModalOpen]);
+
+  // Handle focus trap, Esc key listener, returning focus on close, and background aria-hidden
+  useEffect(() => {
+    if (!isAuthModalOpen) return;
+
+    // 1. Save previously focused element to return focus when modal closes
+    previousActiveElementRef.current = document.activeElement as HTMLElement | null;
+
+    // 2. Set aria-hidden="true" on background app container (#root)
+    const rootEl = document.getElementById('root');
+    if (rootEl) {
+      rootEl.setAttribute('aria-hidden', 'true');
+    }
+
+    // 3. Move focus to the first input field automatically on open
+    const focusTimer = setTimeout(() => {
+      const firstInput = dialogRef.current?.querySelector<HTMLInputElement>(
+        authModalTab === 'signin' ? '#signin-email-input' : '#signup-email-input'
+      ) || dialogRef.current?.querySelector<HTMLElement>(
+        'input:not([disabled]), button:not([disabled])'
+      );
+
+      firstInput?.focus();
+    }, 50);
+
+    // 4. Keyboard Listener for Esc key and Tab focus trapping
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        e.preventDefault();
+        closeAuthModal();
+        return;
+      }
+
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusableElements = Array.from(
+          dialogRef.current.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          )
+        );
+
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement || !dialogRef.current.contains(document.activeElement)) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      clearTimeout(focusTimer);
+      window.removeEventListener('keydown', handleKeyDown);
+
+      // Restore background content visibility to screen readers
+      if (rootEl) {
+        rootEl.removeAttribute('aria-hidden');
+      }
+
+      // Return focus to trigger button
+      if (previousActiveElementRef.current && typeof previousActiveElementRef.current.focus === 'function') {
+        previousActiveElementRef.current.focus();
+      }
+    };
+  }, [isAuthModalOpen, closeAuthModal]);
+
+  // Focus first input field when tab changes inside open modal
+  useEffect(() => {
+    if (isAuthModalOpen) {
+      const focusTimer = setTimeout(() => {
+        const firstInput = dialogRef.current?.querySelector<HTMLInputElement>(
+          authModalTab === 'signin' ? '#signin-email-input' : '#signup-email-input'
+        );
+        firstInput?.focus();
+      }, 50);
+      return () => clearTimeout(focusTimer);
+    }
+  }, [authModalTab, isAuthModalOpen]);
 
   // Reset errors when switching tabs
   const handleTabChange = (tab: 'signin' | 'signup') => {
@@ -73,7 +167,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
           onSuccessNavigate();
         }
       } else {
-        // Generic security error message
         setSignInError(res.error || 'Invalid email or password');
       }
     } finally {
@@ -118,7 +211,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
           onSuccessNavigate();
         }
       } else if (res.errorCode === 'email_already_registered') {
-        // Requirement: Email already registered → inline message, switch to Sign In tab
         setSignUpNotice('Email is already registered. Switching to Sign In tab...');
         
         setTimeout(() => {
@@ -135,10 +227,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
     }
   };
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
       
-      {/* Backdrop overlay */}
+      {/* Backdrop overlay for mouse users */}
       <div 
         className="fixed inset-0" 
         onClick={closeAuthModal} 
@@ -147,7 +239,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
 
       {/* Modal Dialog */}
       <div 
-        className="relative w-full max-w-md bg-[#0e1420] border border-[#222f43] rounded-2xl shadow-2xl overflow-hidden z-10"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
+        tabIndex={-1}
+        className="relative w-full max-w-md bg-[#0e1420] border border-[#222f43] rounded-2xl shadow-2xl overflow-hidden z-10 focus:outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         
@@ -158,8 +255,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
               <Shield className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white tracking-tight">DevFlow Account</h3>
-              <p className="text-xs text-slate-400">Access repository maps and intelligence</p>
+              <h3 id="auth-modal-title" className="text-base font-bold text-white tracking-tight">
+                {authModalTab === 'signin' ? 'Sign In' : 'Sign Up'}
+              </h3>
+              <p className="text-xs text-slate-400">DevFlow Developer Intelligence Account</p>
             </div>
           </div>
 
@@ -174,9 +273,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
 
         {/* Auth Tabs */}
         <div className="px-6 pt-4">
-          <div className="grid grid-cols-2 gap-1 p-1 bg-[#141d2c] rounded-xl border border-[#1f2d42]">
+          <div className="grid grid-cols-2 gap-1 p-1 bg-[#141d2c] rounded-xl border border-[#1f2d42]" role="tablist" aria-label="Authentication Options">
             <button
               onClick={() => handleTabChange('signin')}
+              role="tab"
+              aria-selected={authModalTab === 'signin'}
+              aria-controls="signin-tab-panel"
               className={`py-2 text-xs font-semibold rounded-lg transition-all ${
                 authModalTab === 'signin'
                   ? 'bg-emerald-500 text-slate-950 shadow-md font-bold'
@@ -188,6 +290,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
             </button>
             <button
               onClick={() => handleTabChange('signup')}
+              role="tab"
+              aria-selected={authModalTab === 'signup'}
+              aria-controls="signup-tab-panel"
               className={`py-2 text-xs font-semibold rounded-lg transition-all ${
                 authModalTab === 'signup'
                   ? 'bg-emerald-500 text-slate-950 shadow-md font-bold'
@@ -200,18 +305,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
           </div>
         </div>
 
-        {/* Tab 1: Sign In */}
+        {/* Tab 1: Sign In Panel */}
         {authModalTab === 'signin' && (
-          <form onSubmit={handleSignInSubmit} className="p-6 space-y-4">
+          <form
+            id="signin-tab-panel"
+            role="tabpanel"
+            aria-labelledby="auth-tab-signin"
+            onSubmit={handleSignInSubmit}
+            className="p-6 space-y-4"
+          >
             {signInError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2 animate-in fade-in">
+              <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2 animate-in fade-in">
                 <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                 <span>{signInError}</span>
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-mono font-medium text-slate-300 mb-1.5">
+              <label htmlFor="signin-email-input" className="block text-xs font-mono font-medium text-slate-300 mb-1.5">
                 Email Address
               </label>
               <div className="relative">
@@ -229,7 +340,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
             </div>
 
             <div>
-              <label className="block text-xs font-mono font-medium text-slate-300 mb-1.5">
+              <label htmlFor="signin-password-input" className="block text-xs font-mono font-medium text-slate-300 mb-1.5">
                 Password
               </label>
               <div className="relative">
@@ -259,25 +370,31 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
           </form>
         )}
 
-        {/* Tab 2: Sign Up */}
+        {/* Tab 2: Sign Up Panel */}
         {authModalTab === 'signup' && (
-          <form onSubmit={handleSignUpSubmit} className="p-6 space-y-4">
+          <form
+            id="signup-tab-panel"
+            role="tabpanel"
+            aria-labelledby="auth-tab-signup"
+            onSubmit={handleSignUpSubmit}
+            className="p-6 space-y-4"
+          >
             {signUpError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2 animate-in fade-in">
+              <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2 animate-in fade-in">
                 <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                 <span>{signUpError}</span>
               </div>
             )}
 
             {signUpNotice && (
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-2 animate-in fade-in">
+              <div role="status" className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-2 animate-in fade-in">
                 <UserCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <span>{signUpNotice}</span>
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-mono font-medium text-slate-300 mb-1.5">
+              <label htmlFor="signup-email-input" className="block text-xs font-mono font-medium text-slate-300 mb-1.5">
                 Email Address
               </label>
               <div className="relative">
@@ -296,7 +413,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-mono font-medium text-slate-300">
+                <label htmlFor="signup-password-input" className="text-xs font-mono font-medium text-slate-300">
                   Password
                 </label>
                 <span className="text-[10px] text-slate-400 font-mono">Min 8 chars</span>
@@ -317,7 +434,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
             </div>
 
             <div>
-              <label className="block text-xs font-mono font-medium text-slate-300 mb-1.5">
+              <label htmlFor="signup-confirm-password-input" className="block text-xs font-mono font-medium text-slate-300 mb-1.5">
                 Confirm Password
               </label>
               <div className="relative">
@@ -347,8 +464,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
             </Button>
           </form>
         )}
-        
+
+        {/* Footer badge note */}
+        <div className="px-6 py-3 bg-[#0a0e17] border-t border-[#182334] flex items-center justify-between text-[11px] text-slate-400 font-mono">
+          <span className="flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            Custom SHA-256 password hashing
+          </span>
+          <span>Supabase Cookie Sync</span>
+        </div>
+
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
