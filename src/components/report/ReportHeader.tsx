@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowLeft, ExternalLink, GitFork, ShieldCheck, Home } from 'lucide-react';
 import { parseRepoUrl } from '../../utils/repo-url';
 import { isValidGitHubUrl } from './formatters';
+import { UserMenu } from '../auth/UserMenu';
 
 export interface ReportHeaderProps {
   repositoryUrl: string;
@@ -88,9 +89,21 @@ export const ReportHeader: React.FC<ReportHeaderProps> = ({
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Analysis</span>
           </button>
+
+          <UserMenu
+            onNavigateToDashboard={() => {
+              window.history.pushState({}, '', '/dashboard');
+              window.dispatchEvent(new Event('popstate'));
+            }}
+            onNavigateToSettings={() => {
+              window.history.pushState({}, '', '/settings');
+              window.dispatchEvent(new Event('popstate'));
+            }}
+          />
         </div>
 
       </div>
     </header>
   );
 };
+

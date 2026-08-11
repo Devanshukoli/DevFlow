@@ -3,6 +3,7 @@ import { ArrowLeft, GitFork, Shield } from 'lucide-react';
 import { StatusIndicator, StatusType } from '../ui/status-indicator';
 import { TechnicalLabel } from '../devflow/technical-label';
 import { parseRepoUrl } from '../../utils/repo-url';
+import { UserMenu } from '../auth/UserMenu';
 
 export interface AnalysisHeaderProps {
   repositoryUrl: string;
@@ -65,6 +66,17 @@ export const AnalysisHeader: React.FC<AnalysisHeaderProps> = ({
           </div>
 
           <StatusIndicator status={statusType} size="md" />
+
+          <UserMenu
+            onNavigateToDashboard={() => {
+              window.history.pushState({}, '', '/dashboard');
+              window.dispatchEvent(new Event('popstate'));
+            }}
+            onNavigateToSettings={() => {
+              window.history.pushState({}, '', '/settings');
+              window.dispatchEvent(new Event('popstate'));
+            }}
+          />
         </div>
 
       </div>

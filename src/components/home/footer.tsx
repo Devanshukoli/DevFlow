@@ -22,7 +22,7 @@ export const Footer: React.FC = () => {
 
           {/* Right Links */}
           <div className="flex items-center gap-6 font-mono text-xs">
-            <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-slate-200 transition-colors">
+            <a href="https://github.com/devanshukoli/devflow" target="_blank" rel="noreferrer" className="hover:text-slate-200 transition-colors">
               GitHub
             </a>
             <a href="#docs" onClick={(e) => e.preventDefault()} className="hover:text-slate-200 transition-colors">

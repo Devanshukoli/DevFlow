@@ -2,22 +2,27 @@ import React from 'react';
 import { Layers, Github, FileText, LayoutGrid } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import { UserMenu } from '../auth/UserMenu';
 
 export interface NavbarProps {
   onToggleDesignSystem?: () => void;
   showDesignSystem?: boolean;
+  onNavigateToDashboard?: () => void;
+  onNavigateToSettings?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   onToggleDesignSystem,
   showDesignSystem = false,
+  onNavigateToDashboard,
+  onNavigateToSettings,
 }) => {
   return (
     <header className="sticky top-0 z-40 w-full bg-[#0b0f17]/80 backdrop-blur-md border-b border-[#222f43]/80">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* Brand Logo & Name */}
-        <a href="#" className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 rounded-md p-1">
+        <a href="/" className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 rounded-md p-1">
           <div className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500/20 transition-colors">
             <Layers className="w-4 h-4" />
           </div>
@@ -41,15 +46,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>GitHub</span>
           </a>
 
-          <a
-            href="#docs"
-            onClick={(e) => e.preventDefault()}
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors px-2.5 py-1.5 rounded-md hover:bg-[#17202e]"
-          >
-            <FileText className="w-3.5 h-3.5" />
-            <span>Docs</span>
-          </a>
-
           {onToggleDesignSystem && (
             <Button
               variant="secondary"
@@ -60,6 +56,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               {showDesignSystem ? 'View Homepage' : 'Design System'}
             </Button>
           )}
+
+          <UserMenu
+            onNavigateToDashboard={onNavigateToDashboard}
+            onNavigateToSettings={onNavigateToSettings}
+          />
         </nav>
 
       </div>

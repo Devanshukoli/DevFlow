@@ -252,3 +252,32 @@ export interface ApiErrorResponse {
 export type CreateAnalysisJobResponse = CreateAnalysisJobSuccessResponse | ApiErrorResponse;
 export type GetAnalysisJobResponse = GetAnalysisJobSuccessResponse | ApiErrorResponse;
 export type GetAnalysisResultResponse = GetAnalysisResultSuccessResponse | ApiErrorResponse;
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  avatar: string;
+  createdAt: string;
+}
+
+export interface SignUpRequest {
+  email: string;
+  password: string;
+  confirmPassword?: string;
+}
+
+export interface SignInRequest {
+  email: string;
+  password: string;
+}
+
+export interface AuthSuccessResponse {
+  ok: true;
+  data: {
+    user: AuthUser;
+    sessionToken: string;
+  };
+}
+
+export type AuthResponse = AuthSuccessResponse | ApiErrorResponse;
