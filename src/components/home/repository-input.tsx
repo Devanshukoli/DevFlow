@@ -3,6 +3,8 @@ import { Search, ArrowRight, CheckCircle2, Clock } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { getApiUrl } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
+import { addOrUpdateRecentScan } from '../../utils/recentScans';
 
 export interface RepositoryInputProps {
   onSubmitUrl?: (url: string) => void;
@@ -13,6 +15,7 @@ export const RepositoryInput: React.FC<RepositoryInputProps> = ({
   onSubmitUrl,
   onAnalysisCreated,
 }) => {
+  const { user } = useAuth();
   const [url, setUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -57,6 +60,18 @@ export const RepositoryInput: React.FC<RepositoryInputProps> = ({
 
       if (response.ok && payload.ok) {
         const createdJobId = payload.data.jobId;
+
+        if (user) {
+          addOrUpdateRecentScan(
+            {
+              id: createdJobId,
+              url: trimmed,
+              status: 'running',
+              date: 'In progress',
+            },
+            user.id || user.email
+          );
+        }
 
         if (onSubmitUrl) {
           onSubmitUrl(trimmed);

@@ -9,6 +9,8 @@ import { AnalysisFailedView } from './AnalysisFailedView';
 import { evaluateWorkerStages } from './stages';
 import { GetAnalysisJobSuccessResponse } from '@devflow/shared';
 import { getApiUrl } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
+import { addOrUpdateRecentScan } from '../../utils/recentScans';
 
 export interface AnalysisPageProps {
   jobId: string;
@@ -28,6 +30,7 @@ export interface JobStateData {
 }
 
 export const AnalysisPage: React.FC<AnalysisPageProps> = ({ jobId, onNavigateHome, onViewReport }) => {
+  const { user } = useAuth();
   const [jobData, setJobData] = useState<JobStateData | null>(null);
   const [isNotFound, setIsNotFound] = useState(false);
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
@@ -78,6 +81,20 @@ export const AnalysisPage: React.FC<AnalysisPageProps> = ({ jobId, onNavigateHom
         setIsLoadingInitial(false);
         setIsRetrying(false);
         setFetchError(null);
+
+        if (user && json.data.repositoryUrl) {
+          addOrUpdateRecentScan(
+            {
+              id: jobId,
+              url: json.data.repositoryUrl,
+              status: json.data.status,
+              date: json.data.completedAt
+                ? new Date(json.data.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                : 'In progress',
+            },
+            user.id || user.email
+          );
+        }
 
         // Stop polling if completed or failed
         if (json.data.status === 'completed' || json.data.status === 'failed') {

@@ -18,6 +18,8 @@ import { RepositoryGraphTab } from './RepositoryGraphTab';
 import { AskDevFlowPanel } from './AskDevFlowPanel';
 import { ArrowLeft, RefreshCw, AlertTriangle, FileQuestion } from 'lucide-react';
 import { getApiUrl } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
+import { addOrUpdateRecentScan } from '../../utils/recentScans';
 
 export interface RepositoryReportPageProps {
   jobId: string;
@@ -30,6 +32,7 @@ export const RepositoryReportPage: React.FC<RepositoryReportPageProps> = ({
   onNavigateBack,
   onNavigateHome,
 }) => {
+  const { user } = useAuth();
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [activeTab, setActiveTab] = useState<'intelligence' | 'architecture' | 'api-surface' | 'health' | 'graph'>('intelligence');
   const [isLoading, setIsLoading] = useState(true);
@@ -70,7 +73,27 @@ export const RepositoryReportPage: React.FC<RepositoryReportPageProps> = ({
       const json = (await response.json()) as GetAnalysisResultSuccessResponse | any;
 
       if (json.ok && json.data) {
-        setResult(json.data as AnalysisResult);
+        const res = json.data as AnalysisResult;
+        setResult(res);
+
+        if (user && res.repositoryUrl) {
+          const langs = res.detectedLanguages
+            ? res.detectedLanguages.map((dl) => dl.name).filter(Boolean)
+            : ['TypeScript'];
+
+          addOrUpdateRecentScan(
+            {
+              id: jobId,
+              url: res.repositoryUrl,
+              status: 'completed',
+              languages: langs.length > 0 ? langs.slice(0, 4) : ['TypeScript'],
+              date: res.createdAt
+                ? new Date(res.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            },
+            user.id || user.email
+          );
+        }
       } else {
         if (json.error?.code === 'ANALYSIS_JOB_NOT_COMPLETED') {
           setIsIncomplete(true);

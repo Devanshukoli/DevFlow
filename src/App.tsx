@@ -3,6 +3,7 @@ import { HomePage } from './components/home/HomePage';
 import { DesignSystem } from './components/DesignSystem';
 import { AnalysisPage } from './components/analysis/AnalysisPage';
 import { RepositoryReportPage } from './components/report/RepositoryReportPage';
+import { NewAnalysisPage } from './components/analysis/NewAnalysisPage';
 import { DashboardPage } from './components/dashboard/DashboardPage';
 import { SettingsPage } from './components/settings/SettingsPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -34,6 +35,7 @@ function MainRouter() {
   const analysisMatch = currentPath.match(/^\/analysis\/([a-zA-Z0-9_-]+)$/);
   const isDashboardRoute = currentPath === '/dashboard';
   const isSettingsRoute = currentPath === '/settings';
+  const isNewAnalysisRoute = currentPath === '/new-analysis' || currentPath === '/analyze';
 
   // Handle protected routes redirection
   useEffect(() => {
@@ -67,8 +69,9 @@ function MainRouter() {
       if (!isAuthenticated) return null;
       return (
         <DashboardPage
-          onNavigateHome={() => navigateTo('/')}
+          onNavigateHome={() => navigateTo('/dashboard')}
           onNavigateToSettings={() => navigateTo('/settings')}
+          onNavigateToNewAnalysis={() => navigateTo('/new-analysis')}
         />
       );
     }
@@ -77,8 +80,17 @@ function MainRouter() {
       if (!isAuthenticated) return null;
       return (
         <SettingsPage
-          onNavigateHome={() => navigateTo('/')}
+          onNavigateHome={() => navigateTo(isAuthenticated ? '/dashboard' : '/')}
           onNavigateToDashboard={() => navigateTo('/dashboard')}
+        />
+      );
+    }
+
+    if (isNewAnalysisRoute) {
+      return (
+        <NewAnalysisPage
+          onNavigateToDashboard={() => navigateTo('/dashboard')}
+          onNavigateToSettings={() => navigateTo('/settings')}
         />
       );
     }
@@ -89,7 +101,7 @@ function MainRouter() {
         <RepositoryReportPage
           jobId={reportJobId}
           onNavigateBack={() => navigateTo(`/analysis/${reportJobId}`)}
-          onNavigateHome={() => navigateTo('/')}
+          onNavigateHome={() => navigateTo(isAuthenticated ? '/dashboard' : '/')}
         />
       );
     }
@@ -99,7 +111,7 @@ function MainRouter() {
       return (
         <AnalysisPage
           jobId={activeJobId}
-          onNavigateHome={() => navigateTo('/')}
+          onNavigateHome={() => navigateTo(isAuthenticated ? '/dashboard' : '/')}
           onViewReport={() => navigateTo(`/analysis/${activeJobId}/result`)}
         />
       );

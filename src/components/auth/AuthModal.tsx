@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Lock, Mail, Shield, AlertCircle, ArrowRight, CheckCircle2, UserCheck } from 'lucide-react';
+import { X, Lock, Mail, Shield, AlertCircle, ArrowRight, CheckCircle2, UserCheck, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/button';
 
@@ -22,6 +22,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
   // Sign In form state
   const [signInEmail, setSignInEmail] = useState('');
   const [signInPassword, setSignInPassword] = useState('');
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
   const [signInError, setSignInError] = useState<string | null>(null);
   const [isSignInSubmitting, setIsSignInSubmitting] = useState(false);
 
@@ -29,6 +30,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
   const [signUpConfirmPassword, setSignUpConfirmPassword] = useState('');
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [showSignUpConfirmPassword, setShowSignUpConfirmPassword] = useState(false);
   const [signUpError, setSignUpError] = useState<string | null>(null);
   const [signUpNotice, setSignUpNotice] = useState<string | null>(null);
   const [isSignUpSubmitting, setIsSignUpSubmitting] = useState(false);
@@ -346,14 +349,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
-                  type="password"
+                  type={showSignInPassword ? 'text' : 'password'}
                   required
                   placeholder="••••••••"
                   value={signInPassword}
                   onChange={(e) => setSignInPassword(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 bg-[#121a28] border border-[#222f43] rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                  className="w-full pl-9 pr-10 py-2.5 bg-[#121a28] border border-[#222f43] rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                   id="signin-password-input"
                 />
+                {signInPassword.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowSignInPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-200 transition-colors focus:outline-none focus:text-emerald-400"
+                    aria-label={showSignInPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showSignInPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -421,15 +434,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
-                  type="password"
+                  type={showSignUpPassword ? 'text' : 'password'}
                   required
                   minLength={8}
                   placeholder="At least 8 characters"
                   value={signUpPassword}
                   onChange={(e) => setSignUpPassword(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 bg-[#121a28] border border-[#222f43] rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                  className="w-full pl-9 pr-10 py-2.5 bg-[#121a28] border border-[#222f43] rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                   id="signup-password-input"
                 />
+                {signUpPassword.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowSignUpPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-200 transition-colors focus:outline-none focus:text-emerald-400"
+                    aria-label={showSignUpPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showSignUpPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -440,15 +463,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
-                  type="password"
+                  type={showSignUpConfirmPassword ? 'text' : 'password'}
                   required
                   minLength={8}
                   placeholder="Confirm your password"
                   value={signUpConfirmPassword}
                   onChange={(e) => setSignUpConfirmPassword(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 bg-[#121a28] border border-[#222f43] rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                  className="w-full pl-9 pr-10 py-2.5 bg-[#121a28] border border-[#222f43] rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                   id="signup-confirm-password-input"
                 />
+                {signUpConfirmPassword.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowSignUpConfirmPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-200 transition-colors focus:outline-none focus:text-emerald-400"
+                    aria-label={showSignUpConfirmPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showSignUpConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                )}
               </div>
             </div>
 
