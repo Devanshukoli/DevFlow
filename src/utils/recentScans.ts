@@ -1,3 +1,5 @@
+import { getApiUrl } from './api';
+
 export interface RecentScan {
   id: string;
   name: string;
@@ -22,6 +24,32 @@ export function getRecentScans(userId?: string): RecentScan[] {
   } catch {
     return [];
   }
+}
+
+export async function fetchUserAnalysesFromServer(): Promise<RecentScan[]> {
+  try {
+    const res = await fetch(getApiUrl('/api/users/me/analyses'), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (res.ok) {
+      const json = await res.json();
+      if (json.ok && Array.isArray(json.data)) {
+        return json.data.map((item: any) => ({
+          id: item.job_id || item.id,
+          name: item.repository_name || item.repository_url.replace(/^https?:\/\/(www\.)?github\.com\//i, '').replace(/\/$/, ''),
+          url: item.repository_url,
+          languages: Array.isArray(item.languages) && item.languages.length > 0 ? item.languages : ['TypeScript'],
+          status: item.status || 'completed',
+          date: item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recently',
+          timestamp: item.created_at ? new Date(item.created_at).getTime() : Date.now(),
+        }));
+      }
+    }
+  } catch {
+    // Ignore error
+  }
+  return [];
 }
 
 export function addOrUpdateRecentScan(

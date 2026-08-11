@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getRecentScans, RecentScan } from '../../utils/recentScans';
+import { getRecentScans, fetchUserAnalysesFromServer, addOrUpdateRecentScan, RecentScan } from '../../utils/recentScans';
 import { 
   GitFork, 
   ShieldCheck, 
@@ -41,12 +41,36 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   useEffect(() => {
+    let isMounted = true;
     if (user) {
       const scans = getRecentScans(user.id || user.email);
       setRecentAnalyses(scans);
+
+      fetchUserAnalysesFromServer().then((serverScans) => {
+        if (isMounted && serverScans.length > 0) {
+          setRecentAnalyses(serverScans);
+          serverScans.forEach((scan) => {
+            addOrUpdateRecentScan(
+              {
+                id: scan.id,
+                url: scan.url,
+                name: scan.name,
+                status: scan.status,
+                languages: scan.languages,
+                date: scan.date,
+              },
+              user.id || user.email
+            );
+          });
+        }
+      });
     } else {
       setRecentAnalyses([]);
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   return (

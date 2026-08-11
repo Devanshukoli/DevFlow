@@ -5,6 +5,8 @@ import {
   getAnalysisJobById,
   getAnalysisResultByJobId,
 } from '../services/analysis-service.js';
+import { getSessionTokenFromRequest } from './auth.js';
+import { getUserBySessionToken, recordUserAnalysis } from '../services/user-service.js';
 
 export const analysisRouter = Router();
 
@@ -29,6 +31,15 @@ analysisRouter.post('/analysis', async (req: Request, res: Response) => {
     }
 
     const job = await createAnalysisJob(validatedUrl);
+
+    // Track repository analysis for logged in user if session exists
+    const sessionToken = getSessionTokenFromRequest(req);
+    if (sessionToken) {
+      const user = await getUserBySessionToken(sessionToken);
+      if (user) {
+        recordUserAnalysis(user.id, job.id, validatedUrl, job.status, ['TypeScript']);
+      }
+    }
 
     return res.status(201).json({
       ok: true,

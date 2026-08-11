@@ -1,9 +1,15 @@
 import { Router, Request, Response } from 'express';
-import { registerUser, loginUser, getUserBySessionToken, invalidateSessionToken } from '../services/user-service.js';
+import {
+  registerUser,
+  loginUser,
+  getUserBySessionToken,
+  invalidateSessionToken,
+  getUserAnalyses,
+} from '../services/user-service.js';
 
 export const authRouter = Router();
 
-function getSessionTokenFromRequest(req: Request): string {
+export function getSessionTokenFromRequest(req: Request): string {
   // 1. Try reading HTTP cookie
   const cookieHeader = req.headers.cookie;
   if (cookieHeader) {
@@ -26,6 +32,27 @@ function getSessionTokenFromRequest(req: Request): string {
 
   return '';
 }
+
+// GET /api/users/me/analyses
+authRouter.get('/users/me/analyses', async (req: Request, res: Response) => {
+  const sessionToken = getSessionTokenFromRequest(req);
+  if (!sessionToken) {
+    res.status(401).json({ ok: false, error: { code: 'unauthorized', message: 'Not authenticated' } });
+    return;
+  }
+
+  const user = await getUserBySessionToken(sessionToken);
+  if (!user) {
+    res.status(401).json({ ok: false, error: { code: 'unauthorized', message: 'Session expired or invalid' } });
+    return;
+  }
+
+  const analyses = getUserAnalyses(user.id);
+  res.json({
+    ok: true,
+    data: analyses,
+  });
+});
 
 // POST /api/auth/signup
 authRouter.post('/auth/signup', async (req: Request, res: Response) => {
