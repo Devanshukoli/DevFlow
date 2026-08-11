@@ -7,15 +7,11 @@ import { HowItWorks } from './how-it-works';
 import { Footer } from './footer';
 
 export interface HomePageProps {
-  onToggleDesignSystem?: () => void;
-  showDesignSystem?: boolean;
   onNavigateToDashboard?: () => void;
   onNavigateToSettings?: () => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
-  onToggleDesignSystem,
-  showDesignSystem = false,
   onNavigateToDashboard,
   onNavigateToSettings,
 }) => {
@@ -23,8 +19,6 @@ export const HomePage: React.FC<HomePageProps> = ({
     <div className="min-h-screen bg-[#0b0f17] text-slate-100 font-sans selection:bg-emerald-500/20 selection:text-emerald-400 flex flex-col justify-between">
       <div>
         <Navbar
-          onToggleDesignSystem={onToggleDesignSystem}
-          showDesignSystem={showDesignSystem}
           onNavigateToDashboard={onNavigateToDashboard}
           onNavigateToSettings={onNavigateToSettings}
         />

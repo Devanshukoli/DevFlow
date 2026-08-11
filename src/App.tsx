@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { HomePage } from './components/home/HomePage';
-import { DesignSystem } from './components/DesignSystem';
 import { AnalysisPage } from './components/analysis/AnalysisPage';
 import { RepositoryReportPage } from './components/report/RepositoryReportPage';
 import { NewAnalysisPage } from './components/analysis/NewAnalysisPage';
@@ -10,7 +9,6 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthModal } from './components/auth/AuthModal';
 
 function MainRouter() {
-  const [showDesignSystem, setShowDesignSystem] = useState(false);
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
   const { isAuthenticated, isLoading, openAuthModal } = useAuth();
 
@@ -48,23 +46,6 @@ function MainRouter() {
   }, [currentPath, isAuthenticated, isLoading, isDashboardRoute, isSettingsRoute]);
 
   const renderCurrentView = () => {
-    if (showDesignSystem) {
-      return (
-        <div>
-          <div className="bg-[#111722] border-b border-[#222f43] px-4 py-2.5 flex items-center justify-between text-xs font-mono">
-            <span className="text-emerald-400 font-bold">DEVFLOW DESIGN SYSTEM SHOWCASE</span>
-            <button
-              onClick={() => setShowDesignSystem(false)}
-              className="px-3 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold transition-colors"
-            >
-              ← Back to Homepage
-            </button>
-          </div>
-          <DesignSystem />
-        </div>
-      );
-    }
-
     if (isDashboardRoute) {
       if (!isAuthenticated) return null;
       return (
@@ -119,8 +100,6 @@ function MainRouter() {
 
     return (
       <HomePage
-        onToggleDesignSystem={() => setShowDesignSystem(true)}
-        showDesignSystem={showDesignSystem}
         onNavigateToDashboard={() => navigateTo('/dashboard')}
         onNavigateToSettings={() => navigateTo('/settings')}
       />

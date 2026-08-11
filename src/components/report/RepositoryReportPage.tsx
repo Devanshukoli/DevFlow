@@ -20,6 +20,7 @@ import { ArrowLeft, RefreshCw, AlertTriangle, FileQuestion } from 'lucide-react'
 import { getApiUrl } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import { addOrUpdateRecentScan } from '../../utils/recentScans';
+import { setGuestPendingAnalysis } from '../../utils/guestAnalysis';
 
 export interface RepositoryReportPageProps {
   jobId: string;
@@ -93,6 +94,18 @@ export const RepositoryReportPage: React.FC<RepositoryReportPageProps> = ({
             },
             user.id || user.email
           );
+        } else if (!user && res.repositoryUrl) {
+          const langs = res.detectedLanguages
+            ? res.detectedLanguages.map((dl) => dl.name).filter(Boolean)
+            : ['TypeScript'];
+
+          setGuestPendingAnalysis({
+            jobId,
+            repositoryUrl: res.repositoryUrl,
+            status: 'completed',
+            languages: langs.length > 0 ? langs.slice(0, 4) : ['TypeScript'],
+            createdAt: res.createdAt || new Date().toISOString(),
+          });
         }
       } else {
         if (json.error?.code === 'ANALYSIS_JOB_NOT_COMPLETED') {

@@ -1,19 +1,14 @@
 import React from 'react';
-import { Layers, Github, FileText, LayoutGrid } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Layers, Github } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { UserMenu } from '../auth/UserMenu';
 
 export interface NavbarProps {
-  onToggleDesignSystem?: () => void;
-  showDesignSystem?: boolean;
   onNavigateToDashboard?: () => void;
   onNavigateToSettings?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  onToggleDesignSystem,
-  showDesignSystem = false,
   onNavigateToDashboard,
   onNavigateToSettings,
 }) => {
@@ -45,17 +40,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Github className="w-3.5 h-3.5" />
             <span>GitHub</span>
           </a>
-
-          {onToggleDesignSystem && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onToggleDesignSystem}
-              leftIcon={<LayoutGrid className="w-3.5 h-3.5" />}
-            >
-              {showDesignSystem ? 'View Homepage' : 'Design System'}
-            </Button>
-          )}
 
           <UserMenu
             onNavigateToDashboard={onNavigateToDashboard}

@@ -15,6 +15,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
     authModalTab,
     setAuthModalTab,
     prefilledEmail,
+    confirmedAnalysisToClaim,
     signIn,
     signUp,
   } = useAuth();
@@ -392,6 +393,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccessNavigate }) => {
             onSubmit={handleSignUpSubmit}
             className="p-6 space-y-4"
           >
+            {confirmedAnalysisToClaim && (
+              <div role="status" className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-2.5 animate-in fade-in font-sans">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold block text-white">Analysis Linked</span>
+                  <span>Analysis for <strong className="font-mono text-emerald-400">{confirmedAnalysisToClaim.repositoryName}</strong> will be saved to your account upon signing up.</span>
+                </div>
+              </div>
+            )}
+
             {signUpError && (
               <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2 animate-in fade-in">
                 <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />

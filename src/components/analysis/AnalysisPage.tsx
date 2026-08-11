@@ -11,6 +11,7 @@ import { GetAnalysisJobSuccessResponse } from '@devflow/shared';
 import { getApiUrl } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import { addOrUpdateRecentScan } from '../../utils/recentScans';
+import { setGuestPendingAnalysis } from '../../utils/guestAnalysis';
 
 export interface AnalysisPageProps {
   jobId: string;
@@ -94,6 +95,13 @@ export const AnalysisPage: React.FC<AnalysisPageProps> = ({ jobId, onNavigateHom
             },
             user.id || user.email
           );
+        } else if (!user && json.data.repositoryUrl) {
+          setGuestPendingAnalysis({
+            jobId,
+            repositoryUrl: json.data.repositoryUrl,
+            status: json.data.status,
+            createdAt: json.data.createdAt || new Date().toISOString(),
+          });
         }
 
         // Stop polling if completed or failed

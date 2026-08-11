@@ -5,6 +5,7 @@ import {
   getUserBySessionToken,
   invalidateSessionToken,
   getUserAnalyses,
+  recordUserAnalysis,
 } from '../services/user-service.js';
 
 export const authRouter = Router();
@@ -52,6 +53,37 @@ authRouter.get('/users/me/analyses', async (req: Request, res: Response) => {
     ok: true,
     data: analyses,
   });
+});
+
+// POST /api/users/claim-analysis
+authRouter.post('/users/claim-analysis', async (req: Request, res: Response) => {
+  const sessionToken = getSessionTokenFromRequest(req);
+  if (!sessionToken) {
+    res.status(401).json({ ok: false, error: { code: 'unauthorized', message: 'Not authenticated' } });
+    return;
+  }
+
+  const user = await getUserBySessionToken(sessionToken);
+  if (!user) {
+    res.status(401).json({ ok: false, error: { code: 'unauthorized', message: 'Session expired or invalid' } });
+    return;
+  }
+
+  const { jobId, repositoryUrl, status, languages } = req.body || {};
+  if (!jobId || !repositoryUrl) {
+    res.status(400).json({ ok: false, error: { code: 'INVALID_REQUEST', message: 'jobId and repositoryUrl are required' } });
+    return;
+  }
+
+  const record = recordUserAnalysis(
+    user.id,
+    jobId,
+    repositoryUrl,
+    status || 'completed',
+    Array.isArray(languages) ? languages : ['TypeScript']
+  );
+
+  res.json({ ok: true, data: record });
 });
 
 // POST /api/auth/signup

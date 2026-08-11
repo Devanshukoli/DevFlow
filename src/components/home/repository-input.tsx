@@ -5,6 +5,7 @@ import { Button } from '../ui/button';
 import { getApiUrl } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import { addOrUpdateRecentScan } from '../../utils/recentScans';
+import { setGuestPendingAnalysis } from '../../utils/guestAnalysis';
 
 export interface RepositoryInputProps {
   onSubmitUrl?: (url: string) => void;
@@ -71,6 +72,12 @@ export const RepositoryInput: React.FC<RepositoryInputProps> = ({
             },
             user.id || user.email
           );
+        } else {
+          setGuestPendingAnalysis({
+            jobId: createdJobId,
+            repositoryUrl: trimmed,
+            status: 'running',
+          });
         }
 
         if (onSubmitUrl) {

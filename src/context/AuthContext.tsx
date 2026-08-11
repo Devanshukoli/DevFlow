@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AuthUser, AuthResponse, SignInRequest, SignUpRequest } from '@devflow/shared';
 import { getApiUrl } from '../utils/api';
+import {
+  getGuestPendingAnalysis,
+  clearGuestPendingAnalysis,
+  claimGuestAnalysis,
+  GuestPendingAnalysis,
+} from '../utils/guestAnalysis';
+import { SaveAnalysisModal } from '../components/auth/SaveAnalysisModal';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -9,6 +16,7 @@ interface AuthContextType {
   isAuthModalOpen: boolean;
   authModalTab: 'signin' | 'signup';
   prefilledEmail: string;
+  confirmedAnalysisToClaim: GuestPendingAnalysis | null;
   signIn: (credentials: SignInRequest) => Promise<{ success: boolean; error?: string; errorCode?: string }>;
   signUp: (data: SignUpRequest) => Promise<{ success: boolean; error?: string; errorCode?: string }>;
   signOut: () => Promise<void>;
@@ -34,6 +42,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalTab, setAuthModalTab] = useState<'signin' | 'signup'>('signin');
   const [prefilledEmail, setPrefilledEmail] = useState('');
+
+  // Pending guest analysis state for save prompt
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [pendingAnalysis, setPendingAnalysis] = useState<GuestPendingAnalysis | null>(null);
+  const [confirmedAnalysisToClaim, setConfirmedAnalysisToClaim] = useState<GuestPendingAnalysis | null>(null);
+  const [targetTabAfterPrompt, setTargetTabAfterPrompt] = useState<'signin' | 'signup'>('signup');
 
   // Restore session from server cookie on load
   useEffect(() => {
@@ -78,13 +92,57 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const openAuthModal = (tab: 'signin' | 'signup' = 'signin', email: string = '') => {
-    setAuthModalTab(tab);
     setPrefilledEmail(email);
+
+    // If user is not authenticated and has a pending guest analysis, prompt before sign-up/sign-in
+    const guestAnalysis = getGuestPendingAnalysis();
+    if (!user && guestAnalysis && !confirmedAnalysisToClaim) {
+      setPendingAnalysis(guestAnalysis);
+      setTargetTabAfterPrompt(tab);
+      setIsSaveModalOpen(true);
+      return;
+    }
+
+    setAuthModalTab(tab);
     setIsAuthModalOpen(true);
   };
 
   const closeAuthModal = () => {
     setIsAuthModalOpen(false);
+  };
+
+  const handleConfirmSaveAnalysis = () => {
+    setConfirmedAnalysisToClaim(pendingAnalysis);
+    setIsSaveModalOpen(false);
+    setPendingAnalysis(null);
+    setAuthModalTab(targetTabAfterPrompt);
+    setIsAuthModalOpen(true);
+  };
+
+  const handleDiscardAnalysis = () => {
+    clearGuestPendingAnalysis();
+    setConfirmedAnalysisToClaim(null);
+    setPendingAnalysis(null);
+    setIsSaveModalOpen(false);
+    setAuthModalTab(targetTabAfterPrompt);
+    setIsAuthModalOpen(true);
+  };
+
+  const handleCloseSaveModal = () => {
+    setIsSaveModalOpen(false);
+  };
+
+  const handleCustomSetAuthModalTab = (tab: 'signin' | 'signup') => {
+    // If switching to signup tab and user has guest analysis not decided yet
+    const guestAnalysis = getGuestPendingAnalysis();
+    if (tab === 'signup' && !user && guestAnalysis && !confirmedAnalysisToClaim) {
+      setIsAuthModalOpen(false);
+      setPendingAnalysis(guestAnalysis);
+      setTargetTabAfterPrompt('signup');
+      setIsSaveModalOpen(true);
+      return;
+    }
+    setAuthModalTab(tab);
   };
 
   const signIn = async (credentials: SignInRequest) => {
@@ -100,6 +158,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (data.ok) {
         setUser(data.data.user);
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data.data.user));
+
+        // Claim analysis if confirmed
+        if (confirmedAnalysisToClaim || getGuestPendingAnalysis()) {
+          await claimGuestAnalysis(data.data.user.id);
+          setConfirmedAnalysisToClaim(null);
+        }
+
         return { success: true };
       } else {
         const errorCode = data.error?.code || 'invalid_credentials';
@@ -124,6 +189,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (data.ok) {
         setUser(data.data.user);
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data.data.user));
+
+        // Claim analysis if confirmed
+        if (confirmedAnalysisToClaim || getGuestPendingAnalysis()) {
+          await claimGuestAnalysis(data.data.user.id);
+          setConfirmedAnalysisToClaim(null);
+        }
+
         return { success: true };
       } else {
         const errorCode = data.error?.code || 'SIGNUP_FAILED';
@@ -143,6 +215,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setUser(null);
       localStorage.removeItem(AUTH_STORAGE_KEY);
+      setConfirmedAnalysisToClaim(null);
     }
   };
 
@@ -155,15 +228,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isAuthModalOpen,
         authModalTab,
         prefilledEmail,
+        confirmedAnalysisToClaim,
         signIn,
         signUp,
         signOut,
         openAuthModal,
         closeAuthModal,
-        setAuthModalTab,
+        setAuthModalTab: handleCustomSetAuthModalTab,
       }}
     >
       {children}
+      <SaveAnalysisModal
+        isOpen={isSaveModalOpen}
+        analysis={pendingAnalysis}
+        onConfirmSave={handleConfirmSaveAnalysis}
+        onDiscard={handleDiscardAnalysis}
+        onClose={handleCloseSaveModal}
+      />
     </AuthContext.Provider>
   );
 };
