@@ -6,6 +6,7 @@ import { NewAnalysisPage } from './components/analysis/NewAnalysisPage';
 import { DashboardPage } from './components/dashboard/DashboardPage';
 import { SettingsPage } from './components/settings/SettingsPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { AuthModal } from './components/auth/AuthModal';
 
 function MainRouter() {
@@ -116,8 +117,10 @@ function MainRouter() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <MainRouter />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <MainRouter />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

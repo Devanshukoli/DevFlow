@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-:root {
+:root, html.dark, body.dark {
   --background: #0b0f17;
   --foreground: #f8fafc;
 
@@ -31,6 +31,132 @@
 
   --info: #3b82f6;
   --info-foreground: #172554;
+}
+
+html.light, body.light {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
+  --surface: #ffffff;
+  --surface-elevated: #f1f5f9;
+  --surface-muted: #e2e8f0;
+
+  --border: #cbd5e1;
+  --border-subtle: #e2e8f0;
+
+  --primary: #059669;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
+  --success: #059669;
+  --success-foreground: #ffffff;
+
+  --warning: #d97706;
+  --warning-foreground: #ffffff;
+
+  --danger: #dc2626;
+  --danger-foreground: #ffffff;
+
+  --info: #2563eb;
+  --info-foreground: #ffffff;
+}
+
+/* Light theme explicit class overrides for dark-coded utility classes */
+html.light body,
+.light body {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+html.light .bg-\[\#0b0f17\],
+.light .bg-\[\#0b0f17\] {
+  background-color: #f8fafc !important;
+}
+
+html.light .bg-\[\#0b0f17\]\/80,
+.light .bg-\[\#0b0f17\]\/80 {
+  background-color: rgba(248, 250, 252, 0.9) !important;
+}
+
+html.light .bg-\[\#111722\],
+.light .bg-\[\#111722\] {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-\[\#121927\],
+.light .bg-\[\#121927\],
+html.light .bg-\[\#17202e\],
+.light .bg-\[\#17202e\] {
+  background-color: #f1f5f9 !important;
+}
+
+html.light .bg-\[\#0e1420\],
+.light .bg-\[\#0e1420\],
+html.light .bg-\[\#0d131f\],
+.light .bg-\[\#0d131f\] {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-\[\#141c2b\],
+.light .bg-\[\#141c2b\],
+html.light .bg-\[\#182335\],
+.light .bg-\[\#182335\],
+html.light .bg-\[\#182436\],
+.light .bg-\[\#182436\] {
+  background-color: #e2e8f0 !important;
+}
+
+html.light .bg-\[\#0a0e17\],
+.light .bg-\[\#0a0e17\] {
+  background-color: #f8fafc !important;
+}
+
+html.light .border-\[\#222f43\],
+.light .border-\[\#222f43\],
+html.light .border-\[\#202c3e\],
+.light .border-\[\#202c3e\],
+html.light .border-\[\#202d42\],
+.light .border-\[\#202d42\],
+html.light .border-\[\#1c283a\],
+.light .border-\[\#1c283a\],
+html.light .border-\[\#182333\],
+.light .border-\[\#182333\] {
+  border-color: #cbd5e1 !important;
+}
+
+html.light .text-slate-100,
+.light .text-slate-100,
+html.light .text-white,
+.light .text-white {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-200,
+.light .text-slate-200 {
+  color: #1e293b !important;
+}
+
+html.light .text-slate-300,
+.light .text-slate-300 {
+  color: #334155 !important;
+}
+
+html.light .text-slate-400,
+.light .text-slate-400 {
+  color: #64748b !important;
+}
+
+html.light .text-body {
+  color: #334155 !important;
+}
+
+html.light .text-tech-value {
+  color: #0f172a !important;
 }
 
 @layer base {

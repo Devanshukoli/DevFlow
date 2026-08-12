@@ -2,6 +2,7 @@ import React from 'react';
 import { Layers, Github } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { UserMenu } from '../auth/UserMenu';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
 export interface NavbarProps {
   onNavigateToDashboard?: () => void;
@@ -40,6 +41,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Github className="w-3.5 h-3.5" />
             <span>GitHub</span>
           </a>
+
+          <ThemeToggle />
 
           <UserMenu
             onNavigateToDashboard={onNavigateToDashboard}

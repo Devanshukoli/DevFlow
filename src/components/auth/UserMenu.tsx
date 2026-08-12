@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { LogIn, LogOut, LayoutDashboard, Settings, User as UserIcon, ChevronDown } from 'lucide-react';
+import { LogIn, LogOut, LayoutDashboard, Settings, User as UserIcon, ChevronDown, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../ui/button';
 
 interface UserMenuProps {
@@ -13,6 +14,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   onNavigateToSettings,
 }) => {
   const { user, isAuthenticated, openAuthModal, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -116,6 +118,26 @@ export const UserMenu: React.FC<UserMenuProps> = ({
             >
               <Settings className="w-4 h-4 text-slate-400" />
               <span>Account Settings</span>
+            </button>
+
+            <button
+              onClick={() => {
+                toggleTheme();
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-[#182436] rounded-lg transition-colors text-left"
+              id="user-menu-theme-toggle"
+            >
+              {theme === 'dark' ? (
+                <>
+                  <Sun className="w-4 h-4 text-amber-400" />
+                  <span>Light Theme</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-4 h-4 text-slate-400" />
+                  <span>Dark Theme</span>
+                </>
+              )}
             </button>
           </div>
 

@@ -3,6 +3,7 @@ import { ArrowLeft, ExternalLink, GitFork, ShieldCheck, Home } from 'lucide-reac
 import { parseRepoUrl } from '../../utils/repo-url';
 import { isValidGitHubUrl } from './formatters';
 import { UserMenu } from '../auth/UserMenu';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
 export interface ReportHeaderProps {
   repositoryUrl: string;
@@ -89,6 +90,8 @@ export const ReportHeader: React.FC<ReportHeaderProps> = ({
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Analysis</span>
           </button>
+
+          <ThemeToggle />
 
           <UserMenu
             onNavigateToDashboard={() => {

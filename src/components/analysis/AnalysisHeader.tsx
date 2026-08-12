@@ -4,6 +4,7 @@ import { StatusIndicator, StatusType } from '../ui/status-indicator';
 import { TechnicalLabel } from '../devflow/technical-label';
 import { parseRepoUrl } from '../../utils/repo-url';
 import { UserMenu } from '../auth/UserMenu';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
 export interface AnalysisHeaderProps {
   repositoryUrl: string;
@@ -66,6 +67,8 @@ export const AnalysisHeader: React.FC<AnalysisHeaderProps> = ({
           </div>
 
           <StatusIndicator status={statusType} size="md" />
+
+          <ThemeToggle />
 
           <UserMenu
             onNavigateToDashboard={() => {

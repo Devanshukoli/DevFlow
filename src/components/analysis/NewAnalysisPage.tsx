@@ -3,6 +3,7 @@ import { GitFork, Layers, ArrowLeft, Sparkles, Code2, ShieldCheck, Github } from
 import { Badge } from '../ui/badge';
 import { RepositoryInput } from '../home/repository-input';
 import { UserMenu } from '../auth/UserMenu';
+import { ThemeToggle } from '../ui/ThemeToggle';
 import { useAuth } from '../../context/AuthContext';
 
 export interface NewAnalysisPageProps {
@@ -71,6 +72,7 @@ export const NewAnalysisPage: React.FC<NewAnalysisPageProps> = ({
                 <span>Dashboard</span>
               </button>
             )}
+            <ThemeToggle />
             <UserMenu
               onNavigateToDashboard={onNavigateToDashboard}
               onNavigateToSettings={onNavigateToSettings}

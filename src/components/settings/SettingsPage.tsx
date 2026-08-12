@@ -14,6 +14,7 @@ import {
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { UserMenu } from '../auth/UserMenu';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
 interface SettingsPageProps {
   onNavigateHome: () => void;
@@ -53,10 +54,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             </div>
           </div>
 
-          <UserMenu
-            onNavigateToDashboard={onNavigateToDashboard}
-            onNavigateToSettings={() => {}}
-          />
+          <div className="flex items-center gap-2.5">
+            <ThemeToggle />
+            <UserMenu
+              onNavigateToDashboard={onNavigateToDashboard}
+              onNavigateToSettings={() => {}}
+            />
+          </div>
         </div>
       </header>
 

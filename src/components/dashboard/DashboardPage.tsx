@@ -16,6 +16,7 @@ import {
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { UserMenu } from '../auth/UserMenu';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
 interface DashboardPageProps {
   onNavigateHome: () => void;
@@ -103,6 +104,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             >
               New Analysis
             </Button>
+            <ThemeToggle />
             <UserMenu
               onNavigateToDashboard={() => {}}
               onNavigateToSettings={onNavigateToSettings}
