@@ -25,9 +25,6 @@ export const Footer: React.FC = () => {
             <a href="https://github.com/devanshukoli/devflow" target="_blank" rel="noreferrer" className="hover:text-slate-200 transition-colors">
               GitHub
             </a>
-            <a href="#docs" onClick={(e) => e.preventDefault()} className="hover:text-slate-200 transition-colors">
-              Docs
-            </a>
             <a href="#privacy" onClick={(e) => e.preventDefault()} className="hover:text-slate-200 transition-colors">
               Privacy
             </a>

@@ -117,22 +117,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
         {/* Welcome Hero Banner */}
-        <div className="relative rounded-2xl bg-gradient-to-r from-[#111927] via-[#142033] to-[#0e1624] border border-[#202f47] p-6 sm:p-8 overflow-hidden shadow-2xl">
+        <div className="relative rounded-2xl bg-gradient-to-r from-emerald-500/10 via-slate-100 to-emerald-500/5 dark:from-[#111927] dark:via-[#142033] dark:to-[#0e1624] bg-white dark:bg-[#111927] border border-emerald-500/20 dark:border-[#202f47] p-6 sm:p-8 overflow-hidden shadow-sm dark:shadow-2xl">
           <div className="absolute top-0 right-0 p-8 text-emerald-500/10 pointer-events-none">
             <Sparkles className="w-32 h-32" />
           </div>
 
           <div className="relative z-10 space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-mono font-semibold">
               <ShieldCheck className="w-3.5 h-3.5" />
               Authenticated Session Active
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Welcome back, {user?.name || 'Developer'}!
             </h1>
 
-            <p className="text-slate-300 text-sm max-w-2xl leading-relaxed">
+            <p className="text-slate-600 dark:text-slate-300 text-sm max-w-2xl leading-relaxed">
               Your DevFlow dashboard provides real-time access to repository knowledge maps, FalkorDB graph structures, and AI-grounded codebase intelligence.
             </p>
 
