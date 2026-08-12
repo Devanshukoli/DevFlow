@@ -90,15 +90,23 @@ html.light .bg-\[\#111722\],
 
 html.light .bg-\[\#121927\],
 .light .bg-\[\#121927\],
+html.light .bg-\[\#121a28\],
+.light .bg-\[\#121a28\],
 html.light .bg-\[\#17202e\],
-.light .bg-\[\#17202e\] {
+.light .bg-\[\#17202e\],
+html.light .bg-\[\#151e2e\],
+.light .bg-\[\#151e2e\],
+html.light .bg-\[\#0d121b\],
+.light .bg-\[\#0d121b\] {
   background-color: #f1f5f9 !important;
 }
 
 html.light .bg-\[\#0e1420\],
 .light .bg-\[\#0e1420\],
 html.light .bg-\[\#0d131f\],
-.light .bg-\[\#0d131f\] {
+.light .bg-\[\#0d131f\],
+html.light .bg-\[\#141d2c\],
+.light .bg-\[\#141d2c\] {
   background-color: #ffffff !important;
 }
 
@@ -107,7 +115,11 @@ html.light .bg-\[\#141c2b\],
 html.light .bg-\[\#182335\],
 .light .bg-\[\#182335\],
 html.light .bg-\[\#182436\],
-.light .bg-\[\#182436\] {
+.light .bg-\[\#182436\],
+html.light .bg-\[\#1f2d42\],
+.light .bg-\[\#1f2d42\],
+html.light .bg-\[\#1a273b\],
+.light .bg-\[\#1a273b\] {
   background-color: #e2e8f0 !important;
 }
 
@@ -125,7 +137,11 @@ html.light .border-\[\#202d42\],
 html.light .border-\[\#1c283a\],
 .light .border-\[\#1c283a\],
 html.light .border-\[\#182333\],
-.light .border-\[\#182333\] {
+.light .border-\[\#182333\],
+html.light .border-\[\#1f2d42\],
+.light .border-\[\#1f2d42\],
+html.light .border-\[\#182334\],
+.light .border-\[\#182334\] {
   border-color: #cbd5e1 !important;
 }
 
@@ -157,6 +173,39 @@ html.light .text-body {
 
 html.light .text-tech-value {
   color: #0f172a !important;
+}
+
+/* Explicit input and textarea theme rules to guarantee text visibility */
+html.light input,
+html.light textarea,
+.light input,
+.light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder,
+.light input::placeholder,
+.light textarea::placeholder {
+  color: #64748b !important;
+}
+
+html.dark input,
+html.dark textarea,
+.dark input,
+.dark textarea {
+  background-color: #121a28 !important;
+  color: #f8fafc !important;
+  border-color: #222f43 !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder,
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b !important;
 }
 
 @layer base {

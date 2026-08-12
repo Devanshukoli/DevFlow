@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import crypto from 'node:crypto';
 import { AuthUser, customHashPassword } from '@devflow/shared';
 import { getSupabaseAdminClient } from '../lib/supabase.js';
@@ -31,48 +29,12 @@ interface DBFileStructure {
   analyses: UserAnalysisRecord[];
 }
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const DB_FILE = path.join(DATA_DIR, 'devflow_db.json');
-
-// In-memory cache loaded from disk
+// In-memory state cache only (no file written to disk)
 let dbState: DBFileStructure = {
   users: {},
   sessions: {},
   analyses: [],
 };
-
-function loadDbFromFile(): void {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    if (fs.existsSync(DB_FILE)) {
-      const raw = fs.readFileSync(DB_FILE, 'utf-8');
-      const parsed = JSON.parse(raw);
-      dbState = {
-        users: parsed.users || {},
-        sessions: parsed.sessions || {},
-        analyses: Array.isArray(parsed.analyses) ? parsed.analyses : [],
-      };
-    }
-  } catch (err) {
-    console.warn('[user-service] Could not load local db file, using empty state:', err);
-  }
-}
-
-function saveDbToFile(): void {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    fs.writeFileSync(DB_FILE, JSON.stringify(dbState, null, 2), 'utf-8');
-  } catch (err) {
-    console.warn('[user-service] Failed to write db file:', err);
-  }
-}
-
-// Initial load on module startup
-loadDbFromFile();
 
 function isSupabaseConfigured(): boolean {
   const url = process.env.SUPABASE_URL;
@@ -93,7 +55,7 @@ export async function registerUser(emailInput: string, passwordInput: string): P
     throw { code: 'PASSWORD_TOO_SHORT', message: 'Password must be at least 8 characters long.' };
   }
 
-  // 1. Check if user exists in memory/disk store
+  // 1. Check if user exists in memory store or Supabase
   let existingUser = dbState.users[email] || null;
 
   if (!existingUser && isSupabaseConfigured()) {
@@ -108,7 +70,6 @@ export async function registerUser(emailInput: string, passwordInput: string): P
       if (data) {
         existingUser = data as StoredUser;
         dbState.users[email] = existingUser;
-        saveDbToFile();
       }
     } catch {
       // Supabase query error - fallback
@@ -136,15 +97,14 @@ export async function registerUser(emailInput: string, passwordInput: string): P
     created_at: createdAt,
   };
 
-  // 3. Save to disk database
+  // 3. Save to memory cache
   dbState.users[email] = newUser;
 
-  // 4. Create session
+  // 4. Create session in memory
   const sessionToken = crypto.randomUUID();
   dbState.sessions[sessionToken] = id;
-  saveDbToFile();
 
-  // 5. Optionally sync to Supabase
+  // 5. Save to Supabase ONLY
   if (isSupabaseConfigured()) {
     try {
       const supabase = getSupabaseAdminClient();
@@ -157,7 +117,7 @@ export async function registerUser(emailInput: string, passwordInput: string): P
         created_at: createdAt,
       });
     } catch (err) {
-      console.warn('Notice: Supabase insert fallback to local disk DB:', err);
+      console.warn('Notice: Supabase insert fallback to in-memory session:', err);
     }
   }
 
@@ -189,10 +149,9 @@ export async function loginUser(emailInput: string, passwordInput: string): Prom
       if (data) {
         user = data as StoredUser;
         dbState.users[email] = user;
-        saveDbToFile();
       }
     } catch {
-      // Fallback to local
+      // Fallback to local memory
     }
   }
 
@@ -206,10 +165,9 @@ export async function loginUser(emailInput: string, passwordInput: string): Prom
     throw { code: 'invalid_credentials', message: 'Invalid email or password' };
   }
 
-  // Create new session token
+  // Create new session token in memory
   const sessionToken = crypto.randomUUID();
   dbState.sessions[sessionToken] = user.id;
-  saveDbToFile();
 
   const authUser: AuthUser = {
     id: user.id,
@@ -252,7 +210,6 @@ export async function getUserBySessionToken(sessionToken: string): Promise<AuthU
       if (data) {
         const u = data as StoredUser;
         dbState.users[u.email] = u;
-        saveDbToFile();
         return {
           id: u.id,
           email: u.email,
@@ -272,7 +229,6 @@ export async function getUserBySessionToken(sessionToken: string): Promise<AuthU
 export function invalidateSessionToken(sessionToken: string): void {
   if (sessionToken && dbState.sessions[sessionToken]) {
     delete dbState.sessions[sessionToken];
-    saveDbToFile();
   }
 }
 
@@ -315,8 +271,6 @@ export function recordUserAnalysis(
     };
     dbState.analyses.unshift(record);
   }
-
-  saveDbToFile();
 
   if (isSupabaseConfigured()) {
     try {
